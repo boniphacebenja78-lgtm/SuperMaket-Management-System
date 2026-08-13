@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>
+        {% block title %}
+        Supermarket Management System
+        {% endblock %}
+    </title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+</head>
+
+
+<body>
+
+<!-- =====================================================
+     TOP HEADER
+     ===================================================== -->
+
+<header class="top-header">
+
+    <!-- BRAND -->
+    <div class="brand">
+
+        <div class="brand-icon">
+            S
+        </div>
+
+        <div class="brand-text">
+
+            <h1>SUPERMARKET</h1>
+
+            <span>
+                MANAGEMENT SYSTEM
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <!-- ADMINISTRATOR -->
+    <div class="administrator">
+
+        <div class="admin-avatar">
+            A
+        </div>
+
+        <div class="admin-info">
+
+            <strong>
+                Administrator
+            </strong>
+
+            <span>
+                System Manager
+            </span>
+
+        </div>
+
+    </div>
+
+</header>
+
+
+<!-- =====================================================
+     APPLICATION LAYOUT
+     ===================================================== -->
+
+<div class="app-layout">
+
+
+    <!-- =================================================
+         SIDEBAR
+         ================================================= -->
+
+    <aside class="sidebar">
+
+
+        <!-- SIDEBAR MENU -->
+
+        <div class="sidebar-content">
+
+            <div class="sidebar-title">
+                MAIN MENU
+            </div>
+
+
+            <!-- DASHBOARD -->
+
+            <a href="{{ url_for('home') }}"
+               class="sidebar-link
+               {% if request.path == '/' %}active{% endif %}">
+
+                <span class="menu-icon">
+                    ▣
+                </span>
+
+                <span class="menu-text">
+                    Dashboard
+                </span>
+
+            </a>
+
+
+            <!-- PRODUCTS -->
+
+            <a href="{{ url_for('products') }}"
+               class="sidebar-link
+               {% if request.path.startswith('/products') %}active{% endif %}">
+
+                <span class="menu-icon">
+                    ▦
+                </span>
+
+                <span class="menu-text">
+                    Products
+                </span>
+
+            </a>
+
+
+            <!-- CATEGORIES -->
+
+            <a href="/categories"
+               class="sidebar-link
+               {% if request.path.startswith('/categories') %}active{% endif %}">
+
+                <span class="menu-icon">
+                    ▤
+                </span>
+
+                <span class="menu-text">
+                    Categories
+                </span>
+
+            </a>
+
+
+            <!-- INVENTORY -->
+
+            <a href="{{ url_for('inventory') }}"
+               class="sidebar-link
+               {% if request.path.startswith('/inventory') %}active{% endif %}">
+
+                <span class="menu-icon">
+                    ▤
+                </span>
+
+                <span class="menu-text">
+                    Inventory
+                </span>
+
+            </a>
+
+
+            <!-- CUSTOMERS -->
+
+            <a href="{{ url_for('customers') }}"
+               class="sidebar-link
+               {% if request.path.startswith('/customers') %}active{% endif %}">
+
+                <span class="menu-icon">
+                    ♙
+                </span>
+
+                <span class="menu-text">
+                    Customers
+                </span>
+
+            </a>
+
+
+            <!-- EMPLOYEES -->
+
+            <a href="{{ url_for('employees') }}"
+               class="sidebar-link
+               {% if request.path.startswith('/employees') %}active{% endif %}">
+
+                <span class="menu-icon">
+                    ♙
+                </span>
+
+                <span class="menu-text">
+                    Employees
+                </span>
+
+            </a>
+
+
+            <!-- SALES -->
+
+            <a href="/sales"
+               class="sidebar-link
+               {% if request.path.startswith('/sales') %}active{% endif %}">
+
+                <span class="menu-icon">
+                    ▰
+                </span>
+
+                <span class="menu-text">
+                    Sales
+                </span>
+
+            </a>
+
+
+            <!-- PURCHASES -->
+
+            <a href="/purchases"
+               class="sidebar-link
+               {% if request.path.startswith('/purchases') %}active{% endif %}">
+
+                <span class="menu-icon">
+                    ▥
+                </span>
+
+                <span class="menu-text">
+                    Purchases
+                </span>
+
+            </a>
+
+
+            <!-- SUPPLIERS -->
+
+            <a href="/suppliers"
+               class="sidebar-link
+               {% if request.path.startswith('/suppliers') %}active{% endif %}">
+
+                <span class="menu-icon">
+                    ♧
+                </span>
+
+                <span class="menu-text">
+                    Suppliers
+                </span>
+
+            </a>
+
+
+            <!-- DISCOUNTS -->
+
+            <a href="/discounts"
+               class="sidebar-link
+               {% if request.path.startswith('/discounts') %}active{% endif %}">
+
+                <span class="menu-icon">
+                    %
+                </span>
+
+                <span class="menu-text">
+                    Discounts
+                </span>
+
+            </a>
+
+
+            <!-- LOYALTY -->
+
+            <a href="/loyalty-cards"
+               class="sidebar-link
+               {% if request.path.startswith('/loyalty-cards') %}active{% endif %}">
+
+                <span class="menu-icon">
+                    ★
+                </span>
+
+                <span class="menu-text">
+                    Loyalty
+                </span>
+
+            </a>
+
+
+            <!-- REPORTS -->
+
+            <a href="/reports"
+               class="sidebar-link
+               {% if request.path.startswith('/reports') %}active{% endif %}">
+
+                <span class="menu-icon">
+                    ▥
+                </span>
+
+                <span class="menu-text">
+                    Reports
+                </span>
+
+            </a>
+
+        </div>
+
+
+        <!-- =================================================
+             SIDEBAR BOTTOM
+             ================================================= -->
+
+        <div class="sidebar-bottom">
+
+            <a href="/logout"
+               class="sidebar-link logout-link">
+
+                <span class="menu-icon">
+                    ⇥
+                </span>
+
+                <span class="menu-text">
+                    Logout
+                </span>
+
+            </a>
+
+        </div>
+
+
+    </aside>
+
+
+    <!-- =================================================
+         MAIN CONTENT
+         ================================================= -->
+
+    <main class="main-content">
+
+        <div class="content-wrapper">
+
+            {% block content %}
+
+            {% endblock %}
+
+        </div>
+
+    </main>
+
+
+</div>
+
+
+</body>
+
+</html>

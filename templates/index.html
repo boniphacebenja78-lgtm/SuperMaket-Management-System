@@ -1,0 +1,542 @@
+```html
+{% extends "base.html" %}
+
+{% block title %}
+Dashboard — Supermarket Management System
+{% endblock %}
+
+{% block content %}
+
+<!-- ==========================================
+     DASHBOARD HEADER
+     ========================================== -->
+
+<div class="page-header">
+
+    <div>
+        <h1>Dashboard</h1>
+
+        <p>
+            Welcome to the Supermarket Management System
+        </p>
+    </div>
+
+</div>
+
+
+{% if error %}
+
+<div class="error">
+
+    <strong>Database Error:</strong>
+
+    {{ error }}
+
+</div>
+
+{% else %}
+
+
+<!-- ==========================================
+     MAIN STATISTICS
+     ========================================== -->
+
+<div class="dashboard-cards">
+
+
+    <!-- PRODUCTS -->
+
+    <div class="dashboard-card">
+
+        <div class="dashboard-card-header">
+
+            <span class="dashboard-card-title">
+                PRODUCTS
+            </span>
+
+            <div class="dashboard-card-icon">
+                ▦
+            </div>
+
+        </div>
+
+        <div class="dashboard-number">
+            {{ products }}
+        </div>
+
+        <div class="dashboard-description">
+            Total products in system
+        </div>
+
+        <a href="{{ url_for('products') }}"
+           class="dashboard-card-link">
+
+            View Products →
+
+        </a>
+
+    </div>
+
+
+    <!-- CATEGORIES -->
+
+    <div class="dashboard-card">
+
+        <div class="dashboard-card-header">
+
+            <span class="dashboard-card-title">
+                CATEGORIES
+            </span>
+
+            <div class="dashboard-card-icon">
+                ◈
+            </div>
+
+        </div>
+
+        <div class="dashboard-number">
+            {{ categories }}
+        </div>
+
+        <div class="dashboard-description">
+            Product categories
+        </div>
+
+        <a href="{{ url_for('categories') }}"
+           class="dashboard-card-link">
+
+            View Categories →
+
+        </a>
+
+    </div>
+
+
+    <!-- CUSTOMERS -->
+
+    <div class="dashboard-card">
+
+        <div class="dashboard-card-header">
+
+            <span class="dashboard-card-title">
+                CUSTOMERS
+            </span>
+
+            <div class="dashboard-card-icon">
+                ♙
+            </div>
+
+        </div>
+
+        <div class="dashboard-number">
+            {{ customers }}
+        </div>
+
+        <div class="dashboard-description">
+            Registered customers
+        </div>
+
+        <a href="{{ url_for('customers') }}"
+           class="dashboard-card-link">
+
+            View Customers →
+
+        </a>
+
+    </div>
+
+
+    <!-- SUPPLIERS -->
+
+    <div class="dashboard-card">
+
+        <div class="dashboard-card-header">
+
+            <span class="dashboard-card-title">
+                SUPPLIERS
+            </span>
+
+            <div class="dashboard-card-icon">
+                ♧
+            </div>
+
+        </div>
+
+        <div class="dashboard-number">
+            {{ suppliers }}
+        </div>
+
+        <div class="dashboard-description">
+            Registered suppliers
+        </div>
+
+        <a href="#"
+           class="dashboard-card-link">
+
+            View Suppliers →
+
+        </a>
+
+    </div>
+
+</div>
+
+
+<!-- ==========================================
+     SECONDARY STATISTICS
+     ========================================== -->
+
+<div class="secondary-cards">
+
+
+    <!-- LOW STOCK -->
+
+    <div class="info-card">
+
+        <div class="info-card-header">
+
+            <h3>
+                Low Stock
+            </h3>
+
+            <span class="info-card-icon">
+                ⚠
+            </span>
+
+        </div>
+
+        <div class="info-number">
+            {{ low_stock if low_stock is defined else 0 }}
+        </div>
+
+        <p class="dashboard-description">
+            Products need restocking
+        </p>
+
+        <a href="{{ url_for('inventory') }}"
+           class="dashboard-card-link">
+
+            View Inventory →
+
+        </a>
+
+    </div>
+
+
+    <!-- TODAY'S REVENUE -->
+
+    <div class="info-card">
+
+        <div class="info-card-header">
+
+            <h3>
+                Today's Revenue
+            </h3>
+
+            <span class="info-card-icon">
+                GH₵
+            </span>
+
+        </div>
+
+        <div class="dashboard-number">
+
+            GH₵ {{ "%.2f"|format(
+                today_revenue if today_revenue is defined else 0
+            ) }}
+
+        </div>
+
+        <p class="dashboard-description">
+            Revenue generated today
+        </p>
+
+    </div>
+
+
+    <!-- TOTAL SALES -->
+
+    <div class="info-card">
+
+        <div class="info-card-header">
+
+            <h3>
+                Sales
+            </h3>
+
+            <span class="info-card-icon">
+                ▰
+            </span>
+
+        </div>
+
+        <div class="info-number">
+
+            {{ total_sales if total_sales is defined else 0 }}
+
+        </div>
+
+        <p class="dashboard-description">
+            Sales recorded
+        </p>
+
+        {% if total_sales is defined %}
+
+        <a href="#recent-sales"
+           class="dashboard-card-link">
+
+            View Recent Sales →
+
+        </a>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+
+<!-- ==========================================
+     RECENT SALES
+     ========================================== -->
+
+<div class="content-card" id="recent-sales">
+
+    <div class="content-card-header">
+
+        <div>
+
+            <h2>
+                Recent Sales
+            </h2>
+
+            <p class="dashboard-description">
+                Latest transactions recorded in the system
+            </p>
+
+        </div>
+
+    </div>
+
+
+    {% if recent_sales is defined and recent_sales %}
+
+    <div class="table-container">
+
+        <table class="data-table">
+
+            <thead>
+
+                <tr>
+
+                    <th>
+                        Sale ID
+                    </th>
+
+                    <th>
+                        Customer
+                    </th>
+
+                    <th>
+                        Amount
+                    </th>
+
+                    <th>
+                        Payment
+                    </th>
+
+                    <th>
+                        Date
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% for sale in recent_sales %}
+
+                <tr>
+
+                    <td>
+                        <strong>
+                            {{ sale[0] }}
+                        </strong>
+                    </td>
+
+                    <td>
+                        {{ sale[1] if sale[1] else "Walk-in Customer" }}
+                    </td>
+
+                    <td>
+                        GH₵ {{ "%.2f"|format(sale[2] or 0) }}
+                    </td>
+
+                    <td>
+                        {{ sale[3] }}
+                    </td>
+
+                    <td>
+                        {{ sale[4] }}
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    {% else %}
+
+    <div class="empty-state">
+
+        <div class="empty-state-icon">
+            ▰
+        </div>
+
+        <h3>
+            No Recent Sales
+        </h3>
+
+        <p>
+            Sales transactions will appear here
+            when they are recorded.
+        </p>
+
+    </div>
+
+    {% endif %}
+
+</div>
+
+
+<!-- ==========================================
+     SYSTEM OVERVIEW
+     ========================================== -->
+
+<div class="content-card">
+
+    <div class="content-card-header">
+
+        <div>
+
+            <h2>
+                System Overview
+            </h2>
+
+            <p class="dashboard-description">
+                Current supermarket database statistics
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <div class="overview-grid">
+
+
+        <!-- PRODUCTS -->
+
+        <div class="overview-item">
+
+            <span class="overview-label">
+                Products
+            </span>
+
+            <strong>
+                {{ products }}
+            </strong>
+
+        </div>
+
+
+        <!-- CATEGORIES -->
+
+        <div class="overview-item">
+
+            <span class="overview-label">
+                Categories
+            </span>
+
+            <strong>
+                {{ categories }}
+            </strong>
+
+        </div>
+
+
+        <!-- CUSTOMERS -->
+
+        <div class="overview-item">
+
+            <span class="overview-label">
+                Customers
+            </span>
+
+            <strong>
+                {{ customers }}
+            </strong>
+
+        </div>
+
+
+        <!-- SUPPLIERS -->
+
+        <div class="overview-item">
+
+            <span class="overview-label">
+                Suppliers
+            </span>
+
+            <strong>
+                {{ suppliers }}
+            </strong>
+
+        </div>
+
+
+        <!-- SALES -->
+
+        <div class="overview-item">
+
+            <span class="overview-label">
+                Sales
+            </span>
+
+            <strong>
+                {{ total_sales if total_sales is defined else 0 }}
+            </strong>
+
+        </div>
+
+
+        <!-- LOW STOCK -->
+
+        <div class="overview-item">
+
+            <span class="overview-label">
+                Low Stock
+            </span>
+
+            <strong>
+                {{ low_stock if low_stock is defined else 0 }}
+            </strong>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+{% endif %}
+
+{% endblock %}
+```

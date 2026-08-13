@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+
+{% block title %}
+Inventory Management
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+
+    <div>
+
+        <h1>Inventory Management</h1>
+
+        <p>
+            Monitor stock levels and manage inventory movements.
+        </p>
+
+    </div>
+
+    <a href="{{ url_for('add_stock') }}"
+       class="btn btn-primary">
+
+        + Add Stock
+
+    </a>
+
+</div>
+
+
+<!-- ==========================================
+     INVENTORY SUMMARY
+     ========================================== -->
+
+<div class="inventory-summary">
+
+    <div class="inventory-card">
+
+        <div class="inventory-card-title">
+            Total Inventory Items
+        </div>
+
+        <div class="inventory-number">
+            {{ total_items }}
+        </div>
+
+    </div>
+
+
+    <div class="inventory-card low-stock-card">
+
+        <div class="inventory-card-title">
+            Low Stock
+        </div>
+
+        <div class="inventory-number">
+            {{ low_stock }}
+        </div>
+
+    </div>
+
+
+    <div class="inventory-card out-stock-card">
+
+        <div class="inventory-card-title">
+            Out of Stock
+        </div>
+
+        <div class="inventory-number">
+            {{ out_of_stock }}
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ==========================================
+     SEARCH
+     ========================================== -->
+
+<div class="search-section">
+
+    <form method="GET"
+          action="{{ url_for('inventory') }}">
+
+        <input
+            type="text"
+            name="search"
+            placeholder="Search by product, ID or category..."
+            value="{{ search }}"
+        >
+
+        <button
+            type="submit"
+            class="btn btn-search">
+
+            Search
+
+        </button>
+
+        {% if search %}
+
+            <a
+                href="{{ url_for('inventory') }}"
+                class="btn btn-secondary">
+
+                Clear
+
+            </a>
+
+        {% endif %}
+
+    </form>
+
+</div>
+
+
+<!-- ==========================================
+     INVENTORY TABLE
+     ========================================== -->
+
+<div class="table-container">
+
+    <table>
+
+        <thead>
+
+            <tr>
+
+                <th>Product ID</th>
+
+                <th>Product Name</th>
+
+                <th>Category</th>
+
+                <th>Quantity</th>
+
+                <th>Reorder Level</th>
+
+                <th>Status</th>
+
+                <th>Last Updated</th>
+
+                <th>Action</th>
+
+            </tr>
+
+        </thead>
+
+
+        <tbody>
+
+        {% for item in inventory_items %}
+
+            <tr>
+
+                <td>
+                    {{ item[1] }}
+                </td>
+
+
+                <td>
+
+                    <strong>
+                        {{ item[2] }}
+                    </strong>
+
+                </td>
+
+
+                <td>
+                    {{ item[3] }}
+                </td>
+
+
+                <td>
+
+                    <strong>
+                        {{ item[4] }}
+                    </strong>
+
+                </td>
+
+
+                <td>
+                    {{ item[5] }}
+                </td>
+
+
+                <td>
+
+                    {% if item[4] == 0 %}
+
+                        <span class="status-badge status-out">
+                            Out of Stock
+                        </span>
+
+                    {% elif item[4] <= item[5] %}
+
+                        <span class="status-badge status-low">
+                            Low Stock
+                        </span>
+
+                    {% else %}
+
+                        <span class="status-badge status-good">
+                            In Stock
+                        </span>
+
+                    {% endif %}
+
+                </td>
+
+
+                <td>
+                    {{ item[6] }}
+                </td>
+
+
+                <td>
+
+                    <a
+                        href="{{ url_for('add_stock') }}"
+                        class="btn btn-small">
+
+                        Update
+
+                    </a>
+
+                </td>
+
+            </tr>
+
+        {% else %}
+
+            <tr>
+
+                <td
+                    colspan="8"
+                    class="no-products">
+
+                    No inventory records found.
+
+                </td>
+
+            </tr>
+
+        {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+{% endblock %}

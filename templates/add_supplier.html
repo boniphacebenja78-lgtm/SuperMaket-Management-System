@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}
+Add Supplier - Supermarket Management System
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+
+    <div>
+        <h1>Add Supplier</h1>
+        <p>Register a new supplier in the supermarket system.</p>
+    </div>
+
+</div>
+
+
+{% if error %}
+
+<div class="error">
+    {{ error }}
+</div>
+
+{% endif %}
+
+
+<div class="form-container">
+
+    <form method="POST" action="/suppliers/save">
+
+        <div class="form-row">
+
+            <div class="form-group">
+
+                <label for="supplierID">
+                    Supplier ID
+                </label>
+
+                <input
+                    type="text"
+                    id="supplierID"
+                    name="supplierID"
+                    maxlength="10"
+                    placeholder="e.g. SUP001"
+                    required
+                >
+
+                <small>
+                    Maximum 10 characters.
+                </small>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="supplierName">
+                    Supplier Name
+                </label>
+
+                <input
+                    type="text"
+                    id="supplierName"
+                    name="supplierName"
+                    maxlength="100"
+                    placeholder="Enter supplier name"
+                    required
+                >
+
+            </div>
+
+        </div>
+
+
+        <div class="form-row">
+
+            <div class="form-group">
+
+                <label for="phoneNo">
+                    Phone Number
+                </label>
+
+                <input
+                    type="text"
+                    id="phoneNo"
+                    name="phoneNo"
+                    maxlength="20"
+                    placeholder="Enter phone number"
+                    required
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="email">
+                    Email
+                    <span class="optional">(Optional)</span>
+                </label>
+
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    maxlength="100"
+                    placeholder="supplier@example.com"
+                >
+
+            </div>
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label for="address">
+                Address
+            </label>
+
+            <input
+                type="text"
+                id="address"
+                name="address"
+                maxlength="255"
+                placeholder="Enter supplier address"
+                required
+            >
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label for="city">
+                City
+            </label>
+
+            <input
+                type="text"
+                id="city"
+                name="city"
+                maxlength="100"
+                placeholder="Enter city"
+                required
+            >
+
+        </div>
+
+
+        <div class="form-actions">
+
+            <a href="/suppliers" class="btn btn-secondary">
+                Cancel
+            </a>
+
+            <button
+                type="submit"
+                class="btn btn-primary"
+            >
+                Add Supplier
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}

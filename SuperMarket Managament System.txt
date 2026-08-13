@@ -1,0 +1,352 @@
+CREATE DATABASE SupermarketDB;
+
+USE SupermarketDB;
+
+CREATE TABLE Category (categoryID VARCHAR(10) PRIMARY KEY, categoryName VARCHAR(100) NOT NULL UNIQUE, description VARCHAR(255));
+CREATE TABLE Supplier (supplierID VARCHAR(10) PRIMARY KEY, supplierName VARCHAR(100) NOT NULL, phoneNo VARCHAR(20) NOT NULL UNIQUE, email VARCHAR(100) UNIQUE, address VARCHAR(255) NOT NULL, city VARCHAR(100) NOT NULL);
+CREATE TABLE Customer (customerID VARCHAR(10) PRIMARY KEY, fName VARCHAR(50) NOT NULL, lName VARCHAR(50) NOT NULL, email VARCHAR(100) UNIQUE, address VARCHAR(255), phone VARCHAR(20) NOT NULL UNIQUE);
+CREATE TABLE Employee (employeeID VARCHAR(10) PRIMARY KEY, fName VARCHAR(50) NOT NULL, lName VARCHAR(50) NOT NULL, position VARCHAR(50) NOT NULL, phone VARCHAR(20) NOT NULL UNIQUE, email VARCHAR(100) UNIQUE, hireDate DATE NOT NULL, passwordHash VARCHAR(255) NOT NULL, status ENUM('Active','Inactive') DEFAULT 'Active');
+CREATE TABLE Discount (discountID VARCHAR(10) PRIMARY KEY, discountName VARCHAR(100) NOT NULL, discountPercent DECIMAL(5,2) NOT NULL CHECK(discountPercent>=0 AND discountPercent<=100), discountType ENUM('Percentage','Fixed') NOT NULL DEFAULT 'Percentage', fixedAmount DECIMAL(10,2) NOT NULL DEFAULT 0 CHECK(fixedAmount>=0), startDate DATE NOT NULL, endDate DATE NOT NULL, CHECK(endDate>=startDate));
+CREATE TABLE Product (productID VARCHAR(10) PRIMARY KEY, categoryID VARCHAR(10) NOT NULL, supplierID VARCHAR(10) NOT NULL, productName VARCHAR(100) NOT NULL UNIQUE, barcode VARCHAR(50) UNIQUE, unitPrice DECIMAL(10,2) NOT NULL CHECK(unitPrice>=0), costPrice DECIMAL(10,2) NOT NULL CHECK(costPrice>=0), expiryDate DATE, status ENUM('Available','Out of Stock','Discontinued') DEFAULT 'Available', FOREIGN KEY(categoryID) REFERENCES Category(categoryID) ON UPDATE CASCADE ON DELETE RESTRICT, FOREIGN KEY(supplierID) REFERENCES Supplier(supplierID) ON UPDATE CASCADE ON DELETE RESTRICT);
+CREATE TABLE LoyaltyCard (cardID VARCHAR(10) PRIMARY KEY, customerID VARCHAR(10) NOT NULL UNIQUE, points INT NOT NULL DEFAULT 0 CHECK(points>=0), issueDate DATE NOT NULL, expiryDate DATE NOT NULL, status ENUM('Active','Expired','Suspended') DEFAULT 'Active', CHECK(expiryDate>issueDate), FOREIGN KEY(customerID) REFERENCES Customer(customerID) ON UPDATE CASCADE ON DELETE CASCADE);
+CREATE TABLE Inventory (inventoryID VARCHAR(10) PRIMARY KEY, productID VARCHAR(10) NOT NULL UNIQUE, quantity INT NOT NULL DEFAULT 0 CHECK(quantity>=0), reorderLevel INT NOT NULL DEFAULT 10 CHECK(reorderLevel>=0), lastUpdated DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY(productID) REFERENCES Product(productID) ON UPDATE CASCADE ON DELETE CASCADE);
+CREATE TABLE Purchase (purchaseID VARCHAR(10) PRIMARY KEY, supplierID VARCHAR(10) NOT NULL, employeeID VARCHAR(10) NOT NULL, purchaseDate DATE NOT NULL, totalCost DECIMAL(12,2) NOT NULL DEFAULT 0 CHECK(totalCost>=0), status ENUM('Pending','Completed','Cancelled') DEFAULT 'Pending', FOREIGN KEY(supplierID) REFERENCES Supplier(supplierID) ON UPDATE CASCADE ON DELETE RESTRICT, FOREIGN KEY(employeeID) REFERENCES Employee(employeeID) ON UPDATE CASCADE ON DELETE RESTRICT);
+CREATE TABLE Sale (saleID VARCHAR(10) PRIMARY KEY, customerID VARCHAR(10), employeeID VARCHAR(10) NOT NULL, saleDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, paymentMethod ENUM('Cash','Card','Mobile Money') NOT NULL, pointsRedeemed INT NOT NULL DEFAULT 0 CHECK(pointsRedeemed>=0), FOREIGN KEY(customerID) REFERENCES Customer(customerID) ON UPDATE CASCADE ON DELETE SET NULL, FOREIGN KEY(employeeID) REFERENCES Employee(employeeID) ON UPDATE CASCADE ON DELETE RESTRICT);
+CREATE TABLE ProductDiscount (productID VARCHAR(10) NOT NULL, discountID VARCHAR(10) NOT NULL, PRIMARY KEY(productID,discountID), FOREIGN KEY(productID) REFERENCES Product(productID) ON UPDATE CASCADE ON DELETE CASCADE, FOREIGN KEY(discountID) REFERENCES Discount(discountID) ON UPDATE CASCADE ON DELETE CASCADE);
+CREATE TABLE PurchaseItem (purchaseID VARCHAR(10) NOT NULL, productID VARCHAR(10) NOT NULL, quantity INT NOT NULL CHECK(quantity>0), unitCost DECIMAL(10,2) NOT NULL CHECK(unitCost>=0), PRIMARY KEY(purchaseID,productID), FOREIGN KEY(purchaseID) REFERENCES Purchase(purchaseID) ON UPDATE CASCADE ON DELETE CASCADE, FOREIGN KEY(productID) REFERENCES Product(productID) ON UPDATE CASCADE ON DELETE RESTRICT);
+CREATE TABLE SaleItem (saleID VARCHAR(10) NOT NULL, productID VARCHAR(10) NOT NULL, quantity INT NOT NULL CHECK(quantity>0), unitPrice DECIMAL(10,2) NOT NULL CHECK(unitPrice>=0), discount DECIMAL(5,2) NOT NULL DEFAULT 0 CHECK(discount>=0 AND discount<=100), PRIMARY KEY(saleID,productID), FOREIGN KEY(saleID) REFERENCES Sale(saleID) ON UPDATE CASCADE ON DELETE CASCADE, FOREIGN KEY(productID) REFERENCES Product(productID) ON UPDATE CASCADE ON DELETE RESTRICT);
+CREATE TABLE InventoryMovement (movementID VARCHAR(10) PRIMARY KEY, productID VARCHAR(10) NOT NULL, employeeID VARCHAR(10) NOT NULL, movementType ENUM('Purchase','Sale','Return','Damage','Expiry','Adjustment') NOT NULL, quantity INT NOT NULL CHECK(quantity>0), movementDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, referenceID VARCHAR(10), FOREIGN KEY(productID) REFERENCES Product(productID) ON UPDATE CASCADE ON DELETE RESTRICT, FOREIGN KEY(employeeID) REFERENCES Employee(employeeID) ON UPDATE CASCADE ON DELETE RESTRICT);
+
+
+INSERT INTO Category (categoryID, categoryName, description) VALUES ('CAT0001','Beverages','Soft drinks, juices and bottled water'),('CAT0002','Dairy','Milk, yoghurt, cheese and dairy products'),('CAT0003','Bakery','Bread, cakes and baked products'),('CAT0004','Canned Foods','Canned and preserved foods'),('CAT0005','Snacks','Biscuits, chips and snack foods'),('CAT0006','Breakfast','Cereals and breakfast products'),('CAT0007','Grains','Rice, maize and other grains'),('CAT0008','Pasta','Pasta and noodles'),('CAT0009','Cooking Oil','Cooking oils and fats'),('CAT0010','Cleaning','Household cleaning products'),('CAT0011','Stationery','Writing and office supplies'),('CAT0012','Water','Bottled and packaged water');
+INSERT INTO Supplier (supplierID,supplierName,phoneNo,email,address,city) VALUES ('SUP001','Accra Foods Ltd','+233240000001','info@accrafoods.com','12 Ring Road','Accra'),('SUP002','Golden Harvest Ltd','+233240000002','sales@goldenharvest.com','25 Spintex Road','Accra'),('SUP003','Fresh Choice Ghana','+233240000003','info@freshchoice.com','8 Liberation Road','Accra'),('SUP004','Kumasi Wholesale','+233240000004','sales@kumasiwholesale.com','15 Adum Road','Kumasi'),('SUP005','Prime Beverages','+233240000005','info@primebeverages.com','22 Industrial Area','Tema'),('SUP006','Healthy Dairy Ltd','+233240000006','sales@healthydairy.com','17 Lake Road','Accra'),('SUP007','Best Bakery Supply','+233240000007','info@bestbakery.com','9 Market Street','Kumasi'),('SUP008','Green Farms Ghana','+233240000008','info@greenfarms.com','31 Farm Road','Tamale'),('SUP009','Ocean Fresh Ltd','+233240000009','sales@oceanfresh.com','4 Harbour Road','Tema'),('SUP010','Royal Canned Foods','+233240000010','info@royalcanned.com','11 Factory Road','Accra'),('SUP011','Snack World Ltd','+233240000011','sales@snackworld.com','18 North Industrial Area','Accra'),('SUP012','Morning Foods Ltd','+233240000012','info@morningfoods.com','7 Airport Road','Accra'),('SUP013','Golden Grain Ltd','+233240000013','sales@goldengrain.com','14 Industrial Road','Tema'),('SUP014','African Spices Ltd','+233240000014','info@africanspices.com','6 Asafo Road','Kumasi'),('SUP015','Pure Oils Ghana','+233240000015','sales@pureoils.com','10 Oil Road','Tema'),('SUP016','Clean Home Ltd','+233240000016','info@cleanhome.com','20 Household Road','Accra'),('SUP017','Care Plus Ghana','+233240000017','sales@careplus.com','16 Oxford Street','Accra'),('SUP018','Baby World Ltd','+233240000018','info@babyworld.com','3 Independence Avenue','Accra'),('SUP019','Frozen Choice Ltd','+233240000019','sales@frozenchoice.com','27 Harbour Road','Tema'),('SUP020','Home Essentials Ltd','+233240000020','info@homeessentials.com','5 Central Road','Kumasi'),('SUP021','Stationery Hub Ltd','+233240000021','sales@stationeryhub.com','13 School Road','Accra'),('SUP022','Pet Care Ghana','+233240000022','info@petcareghana.com','21 Animal Road','Accra'),('SUP023','Sweet Treats Ltd','+233240000023','sales@sweettreats.com','2 Chocolate Road','Accra'),('SUP024','Pure Water Ghana','+233240000024','info@purewaterghana.com','30 Water Road','Tema'),('SUP025','Organic Life Ltd','+233240000025','sales@organiclife.com','19 Green Road','Accra');
+INSERT INTO Customer (customerID,fName,lName,email,address,phone) VALUES ('CUS001','John','Mensah','john.mensah@gmail.com','East Legon','+233500000001'),('CUS002','Ama','Boateng','ama.boateng@gmail.com','Osu','+233500000002'),('CUS003','Kwame','Asante','kwame.asante@gmail.com','Kumasi','+233500000003'),('CUS004','Akosua','Owusu','akosua.owusu@gmail.com','Madina','+233500000004'),('CUS005','Daniel','Kofi','daniel.kofi@gmail.com','Tema','+233500000005'),('CUS006','Abena','Osei','abena.osei@gmail.com','Adenta','+233500000006'),('CUS007','Michael','Addo','michael.addo@gmail.com','Spintex','+233500000007'),('CUS008','Linda','Amoah','linda.amoah@gmail.com','Dansoman','+233500000008'),('CUS009','Emmanuel','Darko','emmanuel.darko@gmail.com','Kaneshie','+233500000009'),('CUS010','Grace','Yeboah','grace.yeboah@gmail.com','Airport','+233500000010'),('CUS011','Samuel','Appiah','samuel.appiah@gmail.com','Achimota','+233500000011'),('CUS012','Mary','Frimpong','mary.frimpong@gmail.com','Lapaz','+233500000012'),('CUS013','David','Antwi','david.antwi@gmail.com','Teshie','+233500000013'),('CUS014','Esther','Badu','esther.badu@gmail.com','Nungua','+233500000014'),('CUS015','Joseph','Adjei','joseph.adjei@gmail.com','Labadi','+233500000015'),('CUS016','Patricia','Agyeman','patricia.agyeman@gmail.com','Cantonments','+233500000016'),('CUS017','Isaac','Owusu','isaac.owusu@gmail.com','Legon','+233500000017'),('CUS018','Ruth','Mensimah','ruth.mensimah@gmail.com','Dzorwulu','+233500000018'),('CUS019','Peter','Quaye','peter.quaye@gmail.com','Korle Bu','+233500000019'),('CUS020','Sarah','Aidoo','sarah.aidoo@gmail.com','Weija','+233500000020'),('CUS021','George','Tetteh','george.tetteh@gmail.com','Kasoa','+233500000021'),('CUS022','Martha','Nkrumah','martha.nkrumah@gmail.com','Tema Community 1','+233500000022'),('CUS023','Frank','Baah','frank.baah@gmail.com','Taifa','+233500000023'),('CUS024','Juliet','Kwarteng','juliet.kwarteng@gmail.com','Haatso','+233500000024'),('CUS025','Stephen','Nyarko','stephen.nyarko@gmail.com','Koforidua','+233500000025');
+INSERT INTO Employee (employeeID,fName,lName,position,phone,email,hireDate,passwordHash,status) VALUES ('EMP001','James','Mensah','Manager','+233510000001','james.mensah@supermarket.com','2021-01-10','hash001','Active'),('EMP002','Sarah','Owusu','Cashier','+233510000002','sarah.owusu@supermarket.com','2022-02-15','hash002','Active'),('EMP003','Peter','Asante','Cashier','+233510000003','peter.asante@supermarket.com','2022-03-20','hash003','Active'),('EMP004','Linda','Adjei','Supervisor','+233510000004','linda.adjei@supermarket.com','2021-05-12','hash004','Active'),('EMP005','Michael','Kofi','Stock Clerk','+233510000005','michael.kofi@supermarket.com','2023-01-05','hash005','Active'),('EMP006','Grace','Amoah','Cashier','+233510000006','grace.amoah@supermarket.com','2023-02-11','hash006','Active'),('EMP007','David','Osei','Accountant','+233510000007','david.osei@supermarket.com','2021-07-18','hash007','Active'),('EMP008','Mary','Boateng','Cashier','+233510000008','mary.boateng@supermarket.com','2022-08-22','hash008','Active'),('EMP009','Daniel','Antwi','Stock Clerk','+233510000009','daniel.antwi@supermarket.com','2023-04-10','hash009','Active'),('EMP010','Esther','Badu','Cashier','+233510000010','esther.badu@supermarket.com','2022-09-14','hash010','Active'),('EMP011','Joseph','Darko','Supervisor','+233510000011','joseph.darko@supermarket.com','2021-11-01','hash011','Active'),('EMP012','Patricia','Addo','Cashier','+233510000012','patricia.addo@supermarket.com','2023-06-19','hash012','Active'),('EMP013','Samuel','Quaye','Stock Clerk','+233510000013','samuel.quaye@supermarket.com','2022-12-01','hash013','Active'),('EMP014','Ruth','Agyeman','Cashier','+233510000014','ruth.agyeman@supermarket.com','2023-07-15','hash014','Active'),('EMP015','Isaac','Frimpong','Cashier','+233510000015','isaac.frimpong@supermarket.com','2022-10-20','hash015','Active'),('EMP016','Martha','Appiah','Accountant','+233510000016','martha.appiah@supermarket.com','2021-09-05','hash016','Active'),('EMP017','George','Tetteh','Stock Clerk','+233510000017','george.tetteh@supermarket.com','2023-03-17','hash017','Active'),('EMP018','Juliet','Aidoo','Cashier','+233510000018','juliet.aidoo@supermarket.com','2022-04-23','hash018','Active'),('EMP019','Frank','Baah','Supervisor','+233510000019','frank.baah@supermarket.com','2021-06-30','hash019','Active'),('EMP020','Stephen','Nyarko','Cashier','+233510000020','stephen.nyarko@supermarket.com','2023-08-12','hash020','Active'),('EMP021','Rebecca','Adu','Stock Clerk','+233510000021','rebecca.adu@supermarket.com','2022-05-16','hash021','Active'),('EMP022','Charles','Amponsah','Cashier','+233510000022','charles.amponsah@supermarket.com','2023-09-10','hash022','Active'),('EMP023','Victoria','Mensimah','Cashier','+233510000023','victoria.mensimah@supermarket.com','2022-11-08','hash023','Active'),('EMP024','Albert','Sarpong','Stock Clerk','+233510000024','albert.sarpong@supermarket.com','2023-10-02','hash024','Active'),('EMP025','Monica','Kwarteng','Cashier','+233510000025','monica.kwarteng@supermarket.com','2024-01-12','hash025','Active');
+
+INSERT INTO Discount (discountID,discountName,discountPercent,discountType,fixedAmount,startDate,endDate) VALUES ('DIS001','Weekend Sale',5.00,'Percentage',0,'2026-01-01','2026-12-31'),('DIS002','New Year Sale',10.00,'Percentage',0,'2026-01-01','2026-01-31'),('DIS003','Valentine Special',15.00,'Percentage',0,'2026-02-01','2026-02-28'),('DIS004','March Promotion',8.00,'Percentage',0,'2026-03-01','2026-03-31'),('DIS005','Easter Sale',12.00,'Percentage',0,'2026-04-01','2026-04-30'),('DIS006','May Special',7.50,'Percentage',0,'2026-05-01','2026-05-31'),('DIS007','June Promotion',10.00,'Percentage',0,'2026-06-01','2026-06-30'),('DIS008','Mid Year Sale',20.00,'Percentage',0,'2026-06-01','2026-07-31'),('DIS009','Back To School',15.00,'Percentage',0,'2026-08-01','2026-09-30'),('DIS010','September Sale',5.00,'Percentage',0,'2026-09-01','2026-09-30'),('DIS011','October Promotion',10.00,'Percentage',0,'2026-10-01','2026-10-31'),('DIS012','November Sale',12.00,'Percentage',0,'2026-11-01','2026-11-30'),('DIS013','Black Friday',25.00,'Percentage',0,'2026-11-20','2026-11-30'),('DIS014','Christmas Early Sale',15.00,'Percentage',0,'2026-12-01','2026-12-15'),('DIS015','Christmas Sale',20.00,'Percentage',0,'2026-12-16','2026-12-31'),('DIS016','Loyalty Discount',5.00,'Percentage',0,'2026-01-01','2026-12-31'),('DIS017','Bulk Purchase',10.00,'Percentage',0,'2026-01-01','2026-12-31'),('DIS018','Student Discount',7.00,'Percentage',0,'2026-01-01','2026-12-31'),('DIS019','Family Discount',8.00,'Percentage',0,'2026-01-01','2026-12-31'),('DIS020','Member Special',6.00,'Percentage',0,'2026-01-01','2026-12-31'),('DIS021','Fresh Foods Sale',9.00,'Percentage',0,'2026-02-01','2026-12-31'),('DIS022','Healthy Foods Sale',11.00,'Percentage',0,'2026-03-01','2026-12-31'),('DIS023','Clearance Sale',30.00,'Percentage',0,'2026-08-01','2026-10-31'),('DIS024','Employee Discount',10.00,'Percentage',0,'2026-01-01','2026-12-31'),('DIS025','Special Customer Sale',18.00,'Percentage',0,'2026-07-01','2026-12-31');
+INSERT INTO Product (productID,categoryID,supplierID,productName,unitPrice,costPrice,expiryDate,status) VALUES ('PRO001','CAT0001','SUP005','Coca Cola 500ml',8.00,5.00,'2027-06-30','Available'),('PRO002','CAT0002','SUP006','Fresh Milk 1L',18.00,13.00,'2026-09-15','Available'),('PRO003','CAT0003','SUP007','White Bread',15.00,10.00,'2026-08-15','Available'),('PRO004','CAT0001','SUP003','Apples 1kg',25.00,18.00,'2026-08-20','Available'),('PRO005','CAT0004','SUP008','Tomatoes 1kg',12.00,8.00,'2026-08-14','Available'),('PRO006','CAT0004','SUP003','Beef 1kg',75.00,60.00,'2026-08-25','Available'),('PRO007','CAT0004','SUP009','Tilapia 1kg',65.00,50.00,'2026-08-18','Available'),('PRO008','CAT0004','SUP010','Baked Beans 400g',14.00,9.00,'2028-01-30','Available'),('PRO009','CAT0005','SUP011','Potato Chips',10.00,6.00,'2027-05-20','Available'),('PRO010','CAT0006','SUP012','Corn Flakes 500g',32.00,24.00,'2027-03-15','Available'),('PRO011','CAT0007','SUP013','Rice 5kg',85.00,65.00,'2028-02-28','Available'),('PRO012','CAT0008','SUP013','Spaghetti 500g',16.00,11.00,'2027-11-30','Available'),('PRO013','CAT0004','SUP010','Tomato Ketchup',20.00,14.00,'2027-08-10','Available'),('PRO014','CAT0004','SUP014','Curry Powder',12.00,8.00,'2028-01-15','Available'),('PRO015','CAT0009','SUP015','Cooking Oil 1L',28.00,21.00,'2027-12-31','Available'),('PRO016','CAT0010','SUP016','Laundry Detergent',35.00,26.00,'2028-04-20','Available'),('PRO017','CAT0010','SUP017','Bathing Soap',9.00,6.00,'2028-05-30','Available'),('PRO018','CAT0010','SUP018','Baby Diapers',75.00,58.00,'2028-06-30','Available'),('PRO019','CAT0004','SUP019','Frozen Chicken',90.00,72.00,'2026-11-20','Available'),('PRO020','CAT0010','SUP020','Plastic Bucket',25.00,17.00,NULL,'Available'),('PRO021','CAT0011','SUP021','Notebook',12.00,7.00,NULL,'Available'),('PRO022','CAT0010','SUP022','Dog Food 2kg',55.00,42.00,'2027-10-15','Available'),('PRO023','CAT0005','SUP023','Chocolate Bar',8.00,5.00,'2027-04-30','Available'),('PRO024','CAT0012','SUP024','Bottled Water 1.5L',6.00,3.50,'2027-12-15','Available'),('PRO025','CAT0001','SUP025','Organic Honey',45.00,32.00,'2028-03-31','Available');
+
+INSERT INTO LoyaltyCard (cardID,customerID,points,issueDate,expiryDate,status) VALUES ('CARD001','CUS001',120,'2026-01-05','2027-01-05','Active'),('CARD002','CUS002',250,'2026-01-10','2027-01-10','Active'),('CARD003','CUS003',80,'2026-01-15','2027-01-15','Active'),('CARD004','CUS004',310,'2026-01-20','2027-01-20','Active'),('CARD005','CUS005',145,'2026-02-01','2027-02-01','Active'),('CARD006','CUS006',60,'2026-02-05','2027-02-05','Active'),('CARD007','CUS007',400,'2026-02-10','2027-02-10','Active'),('CARD008','CUS008',175,'2026-02-15','2027-02-15','Active'),('CARD009','CUS009',90,'2026-02-20','2027-02-20','Active'),('CARD010','CUS010',220,'2026-03-01','2027-03-01','Active'),('CARD011','CUS011',130,'2026-03-05','2027-03-05','Active'),('CARD012','CUS012',70,'2026-03-10','2027-03-10','Active'),('CARD013','CUS013',350,'2026-03-15','2027-03-15','Active'),('CARD014','CUS014',200,'2026-03-20','2027-03-20','Active'),('CARD015','CUS015',55,'2026-04-01','2027-04-01','Active'),('CARD016','CUS016',180,'2026-04-05','2027-04-05','Active'),('CARD017','CUS017',275,'2026-04-10','2027-04-10','Active'),('CARD018','CUS018',95,'2026-04-15','2027-04-15','Active'),('CARD019','CUS019',160,'2026-05-01','2027-05-01','Active'),('CARD020','CUS020',420,'2026-05-05','2027-05-05','Active'),('CARD021','CUS021',110,'2026-05-10','2027-05-10','Active'),('CARD022','CUS022',235,'2026-05-15','2027-05-15','Active'),('CARD023','CUS023',75,'2026-06-01','2027-06-01','Active'),('CARD024','CUS024',190,'2026-06-05','2027-06-05','Active'),('CARD025','CUS025',300,'2026-06-10','2027-06-10','Active');
+
+INSERT INTO Inventory (inventoryID,productID,quantity,reorderLevel) VALUES ('INV001','PRO001',150,20),('INV002','PRO002',80,15),('INV003','PRO003',100,20),('INV004','PRO004',60,10),('INV005','PRO005',120,25),('INV006','PRO006',45,10),('INV007','PRO007',40,10),('INV008','PRO008',90,15),('INV009','PRO009',130,20),('INV010','PRO010',70,15),('INV011','PRO011',85,15),('INV012','PRO012',100,20),('INV013','PRO013',75,15),('INV014','PRO014',90,20),('INV015','PRO015',65,15),('INV016','PRO016',55,10),('INV017','PRO017',200,30),('INV018','PRO018',50,10),('INV019','PRO019',35,10),('INV020','PRO020',80,15),('INV021','PRO021',150,25),('INV022','PRO022',45,10),('INV023','PRO023',180,30),('INV024','PRO024',250,40),('INV025','PRO025',60,10);
+
+INSERT INTO Purchase (purchaseID,supplierID,employeeID,purchaseDate,totalCost,status) VALUES ('PUR001','SUP001','EMP005','2026-07-01',1000.00,'Completed'),('PUR002','SUP002','EMP009','2026-07-02',1200.00,'Completed'),('PUR003','SUP003','EMP005','2026-07-03',1080.00,'Completed'),('PUR004','SUP004','EMP013','2026-07-04',900.00,'Completed'),('PUR005','SUP005','EMP017','2026-07-05',750.00,'Completed'),('PUR006','SUP006','EMP005','2026-07-06',1040.00,'Completed'),('PUR007','SUP007','EMP009','2026-07-07',800.00,'Completed'),('PUR008','SUP008','EMP013','2026-07-08',640.00,'Completed'),('PUR009','SUP009','EMP017','2026-07-09',1000.00,'Completed'),('PUR010','SUP010','EMP005','2026-07-10',900.00,'Completed'),('PUR011','SUP011','EMP009','2026-07-11',720.00,'Completed'),('PUR012','SUP012','EMP013','2026-07-12',960.00,'Completed'),('PUR013','SUP013','EMP017','2026-07-13',1300.00,'Completed'),('PUR014','SUP014','EMP005','2026-07-14',640.00,'Completed'),('PUR015','SUP015','EMP009','2026-07-15',840.00,'Completed'),('PUR016','SUP016','EMP013','2026-07-16',780.00,'Completed'),('PUR017','SUP017','EMP017','2026-07-17',600.00,'Completed'),('PUR018','SUP018','EMP005','2026-07-18',1160.00,'Completed'),('PUR019','SUP019','EMP009','2026-07-19',1080.00,'Completed'),('PUR020','SUP020','EMP013','2026-07-20',680.00,'Completed'),('PUR021','SUP021','EMP017','2026-07-21',560.00,'Completed'),('PUR022','SUP022','EMP005','2026-07-22',840.00,'Completed'),('PUR023','SUP023','EMP009','2026-07-23',500.00,'Completed'),('PUR024','SUP024','EMP013','2026-07-24',700.00,'Completed'),('PUR025','SUP025','EMP017','2026-07-25',960.00,'Completed');
+
+INSERT INTO Sale (saleID,customerID,employeeID,saleDate,paymentMethod,pointsRedeemed) VALUES ('SAL001','CUS001','EMP002','2026-08-01 09:10:00','Cash',0),('SAL002','CUS002','EMP003','2026-08-01 10:20:00','Card',0),('SAL003','CUS003','EMP006','2026-08-01 11:30:00','Mobile Money',0),('SAL004','CUS004','EMP008','2026-08-02 09:45:00','Cash',0),('SAL005','CUS005','EMP010','2026-08-02 12:15:00','Card',0),('SAL006','CUS006','EMP012','2026-08-02 14:20:00','Mobile Money',0),('SAL007','CUS007','EMP014','2026-08-03 08:50:00','Cash',0),('SAL008','CUS008','EMP015','2026-08-03 10:10:00','Card',0),('SAL009','CUS009','EMP018','2026-08-03 13:25:00','Mobile Money',0),('SAL010','CUS010','EMP020','2026-08-04 09:30:00','Cash',0),('SAL011','CUS011','EMP022','2026-08-04 11:40:00','Card',0),('SAL012','CUS012','EMP023','2026-08-04 15:10:00','Mobile Money',0),('SAL013','CUS013','EMP025','2026-08-05 08:30:00','Cash',0),('SAL014','CUS014','EMP002','2026-08-05 10:50:00','Card',0),('SAL015','CUS015','EMP003','2026-08-05 13:40:00','Mobile Money',0),('SAL016','CUS016','EMP006','2026-08-06 09:15:00','Cash',0),('SAL017','CUS017','EMP008','2026-08-06 11:25:00','Card',0),('SAL018','CUS018','EMP010','2026-08-06 14:30:00','Mobile Money',0),('SAL019','CUS019','EMP012','2026-08-07 08:45:00','Cash',0),('SAL020','CUS020','EMP014','2026-08-07 10:30:00','Card',0),('SAL021','CUS021','EMP015','2026-08-07 12:40:00','Mobile Money',0),('SAL022','CUS022','EMP018','2026-08-07 14:50:00','Cash',0),('SAL023','CUS023','EMP020','2026-08-08 09:20:00','Card',0),('SAL024','CUS024','EMP022','2026-08-08 11:35:00','Mobile Money',0),('SAL025','CUS025','EMP023','2026-08-08 13:45:00','Cash',0);
+
+INSERT INTO ProductDiscount (productID,discountID) VALUES ('PRO001','DIS001'),('PRO002','DIS002'),('PRO003','DIS003'),('PRO004','DIS004'),('PRO005','DIS005'),('PRO006','DIS006'),('PRO007','DIS007'),('PRO008','DIS008'),('PRO009','DIS009'),('PRO010','DIS010'),('PRO011','DIS011'),('PRO012','DIS012'),('PRO013','DIS013'),('PRO014','DIS014'),('PRO015','DIS015'),('PRO016','DIS016'),('PRO017','DIS017'),('PRO018','DIS018'),('PRO019','DIS019'),('PRO020','DIS020'),('PRO021','DIS021'),('PRO022','DIS022'),('PRO023','DIS023'),('PRO024','DIS024'),('PRO025','DIS025');
+
+INSERT INTO PurchaseItem (purchaseID,productID,quantity,unitCost) VALUES ('PUR001','PRO001',200,5.00),('PUR002','PRO002',100,13.00),('PUR003','PRO003',80,10.00),('PUR004','PRO004',60,18.00),('PUR005','PRO005',80,8.00),('PUR006','PRO006',20,60.00),('PUR007','PRO007',16,50.00),('PUR008','PRO008',70,9.00),('PUR009','PRO009',120,6.00),('PUR010','PRO010',40,24.00),('PUR011','PRO011',20,65.00),('PUR012','PRO012',80,11.00),('PUR013','PRO013',60,14.00),('PUR014','PRO014',80,8.00),('PUR015','PRO015',40,21.00),('PUR016','PRO016',30,26.00),('PUR017','PRO017',100,6.00),('PUR018','PRO018',20,58.00),('PUR019','PRO019',15,72.00),('PUR020','PRO020',40,17.00),('PUR021','PRO021',80,7.00),('PUR022','PRO022',20,42.00),('PUR023','PRO023',100,5.00),('PUR024','PRO024',200,3.50),('PUR025','PRO025',30,32.00);
+
+INSERT INTO SaleItem (saleID,productID,quantity,unitPrice,discount) VALUES ('SAL001','PRO001',10,8.00,5.00),('SAL002','PRO002',5,18.00,5.00),('SAL003','PRO003',8,15.00,0.00),('SAL004','PRO004',4,25.00,16.00),('SAL005','PRO005',15,12.00,16.67),('SAL006','PRO006',2,75.00,25.33),('SAL007','PRO007',2,65.00,0.00),('SAL008','PRO008',7,14.00,0.00),('SAL009','PRO009',8,10.00,10.00),('SAL010','PRO010',5,32.00,0.00),('SAL011','PRO011',1,85.00,0.00),('SAL012','PRO012',7,16.00,7.14),('SAL013','PRO013',10,20.00,15.00),('SAL014','PRO014',8,12.00,0.00),('SAL015','PRO015',5,28.00,10.71),('SAL016','PRO016',4,35.00,0.00),('SAL017','PRO017',10,9.00,8.89),('SAL018','PRO018',2,75.00,26.67),('SAL019','PRO019',2,90.00,13.89),('SAL020','PRO020',4,25.00,10.00),('SAL021','PRO021',10,12.00,12.50),('SAL022','PRO022',3,55.00,20.00),('SAL023','PRO023',8,8.00,0.00),('SAL024','PRO024',20,6.00,1.67),('SAL025','PRO025',4,45.00,19.44);
+
+CREATE VIEW ProductStockStatus AS SELECT p.productID,p.productName,c.categoryName,s.supplierName,i.quantity,i.reorderLevel,CASE WHEN i.quantity=0 THEN 'Out of Stock' WHEN i.quantity<=i.reorderLevel THEN 'Low Stock' ELSE 'In Stock' END AS stockStatus FROM Product p JOIN Category c ON p.categoryID=c.categoryID JOIN Supplier s ON p.supplierID=s.supplierID JOIN Inventory i ON p.productID=i.productID;
+
+CREATE OR REPLACE VIEW CustomerPurchaseHistory AS SELECT c.customerID,CONCAT(c.fName,' ',c.lName) AS customerName,s.saleID,s.saleDate,p.productName,si.quantity,si.unitPrice,si.discount,si.quantity*si.unitPrice*(1-si.discount/100) AS subTotal FROM Customer c JOIN Sale s ON c.customerID=s.customerID JOIN SaleItem si ON s.saleID=si.saleID JOIN Product p ON si.productID=p.productID;
+
+CREATE OR REPLACE VIEW ActiveDiscounts AS SELECT d.discountID,d.discountName,d.discountType,d.discountPercent,d.fixedAmount,d.startDate,d.endDate,p.productID,p.productName FROM Discount d JOIN ProductDiscount pd ON d.discountID=pd.discountID JOIN Product p ON pd.productID=p.productID WHERE CURDATE() BETWEEN d.startDate AND d.endDate;
+
+CREATE OR REPLACE VIEW SupplierPurchaseSummary AS SELECT s.supplierID,s.supplierName,COUNT(DISTINCT pu.purchaseID) AS totalPurchases,COALESCE(SUM(pu.totalCost),0) AS totalPurchaseCost FROM Supplier s LEFT JOIN Purchase pu ON s.supplierID=pu.supplierID GROUP BY s.supplierID,s.supplierName;
+
+CREATE OR REPLACE VIEW SalesSummary AS SELECT DATE(s.saleDate) AS saleDate,COUNT(DISTINCT s.saleID) AS totalSales,COALESCE(SUM(si.quantity*si.unitPrice*(1-si.discount/100)),0) AS totalRevenue,COALESCE(SUM(s.pointsRedeemed),0) AS totalPointsRedeemed FROM Sale s LEFT JOIN SaleItem si ON s.saleID=si.saleID GROUP BY DATE(s.saleDate);
+
+
+DELIMITER //
+CREATE PROCEDURE ProcessSale(IN p_saleID VARCHAR(10),IN p_customerID VARCHAR(10),IN p_employeeID VARCHAR(10),IN p_productID VARCHAR(10),IN p_quantity INT,IN p_paymentMethod VARCHAR(20))
+BEGIN
+DECLARE v_price DECIMAL(10,2);
+DECLARE v_discount DECIMAL(5,2) DEFAULT 0;
+SELECT unitPrice INTO v_price FROM Product WHERE productID=p_productID AND status<>'Discontinued';
+SELECT COALESCE(MAX(d.discountPercent),0) INTO v_discount FROM Discount d JOIN ProductDiscount pd ON d.discountID=pd.discountID WHERE pd.productID=p_productID AND d.discountType='Percentage' AND CURDATE() BETWEEN d.startDate AND d.endDate;
+INSERT INTO Sale(saleID,customerID,employeeID,paymentMethod) VALUES(p_saleID,p_customerID,p_employeeID,p_paymentMethod);
+INSERT INTO SaleItem(saleID,productID,quantity,unitPrice,discount) VALUES(p_saleID,p_productID,p_quantity,v_price,v_discount);
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE PROCEDURE SearchProducts(IN p_search VARCHAR(100))
+BEGIN
+SELECT p.productID,p.productName,p.barcode,c.categoryName,p.unitPrice,i.quantity,p.status FROM Product p JOIN Category c ON p.categoryID=c.categoryID JOIN Inventory i ON p.productID=i.productID WHERE p.productName LIKE CONCAT('%',p_search,'%') OR p.barcode=p_search OR c.categoryName LIKE CONCAT('%',p_search,'%');
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE PROCEDURE RecordPurchase(IN p_purchaseID VARCHAR(10),IN p_supplierID VARCHAR(10),IN p_employeeID VARCHAR(10),IN p_productID VARCHAR(10),IN p_quantity INT,IN p_unitCost DECIMAL(10,2))
+BEGIN
+DECLARE v_total DECIMAL(12,2);
+INSERT INTO Purchase(purchaseID,supplierID,employeeID,purchaseDate,totalCost,status) VALUES(p_purchaseID,p_supplierID,p_employeeID,CURDATE(),p_quantity*p_unitCost,'Completed');
+INSERT INTO PurchaseItem(purchaseID,productID,quantity,unitCost) VALUES(p_purchaseID,p_productID,p_quantity,p_unitCost);
+SELECT SUM(quantity*unitCost) INTO v_total FROM PurchaseItem WHERE purchaseID=p_purchaseID;
+UPDATE Purchase SET totalCost=v_total WHERE purchaseID=p_purchaseID;
+END //
+DELIMITER ;
+
+DELIMITER //
+
+CREATE FUNCTION CalculateSaleTotal(p_saleID VARCHAR(10))
+RETURNS DECIMAL(12,2)
+DETERMINISTIC
+READS SQL DATA
+BEGIN
+DECLARE v_total DECIMAL(12,2);
+
+SELECT COALESCE(SUM(quantity*unitPrice*(1-discount/100)),0) INTO v_total
+FROM SaleItem
+WHERE saleID=p_saleID;
+
+RETURN v_total;
+END //
+
+DELIMITER ;
+
+
+DELIMITER //
+
+CREATE FUNCTION GetProductDiscount(p_productID VARCHAR(10))
+RETURNS DECIMAL(5,2)
+DETERMINISTIC
+READS SQL DATA
+BEGIN
+DECLARE v_discount DECIMAL(5,2) DEFAULT 0;
+
+SELECT COALESCE(MAX(CASE WHEN d.discountType='Percentage' THEN d.discountPercent WHEN d.discountType='Fixed' AND p.unitPrice>0 THEN (d.fixedAmount/p.unitPrice)*100 ELSE 0 END),0) INTO v_discount
+FROM Discount d
+JOIN ProductDiscount pd ON d.discountID=pd.discountID
+JOIN Product p ON pd.productID=p.productID
+WHERE pd.productID=p_productID
+AND CURDATE() BETWEEN d.startDate AND d.endDate;
+
+RETURN LEAST(v_discount,100);
+END //
+
+DELIMITER ;
+
+DELIMITER //
+
+CREATE TRIGGER BeforeSaleItemInsert
+BEFORE INSERT ON SaleItem
+FOR EACH ROW
+BEGIN
+DECLARE v_stock INT;
+
+SELECT quantity INTO v_stock FROM Inventory WHERE productID=NEW.productID;
+
+IF v_stock IS NULL THEN
+SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Product does not have an inventory record';
+END IF;
+
+IF NEW.quantity>v_stock THEN
+SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Insufficient stock for this product';
+END IF;
+END //
+
+DELIMITER ;
+
+DELIMITER //
+
+CREATE TRIGGER AfterSaleItemInsert
+AFTER INSERT ON SaleItem
+FOR EACH ROW
+BEGIN
+UPDATE Inventory SET quantity=quantity-NEW.quantity,lastUpdated=CURRENT_TIMESTAMP WHERE productID=NEW.productID;
+END //
+
+DELIMITER ;
+
+DELIMITER //
+
+CREATE TRIGGER AfterPurchaseItemInsert
+AFTER INSERT ON PurchaseItem
+FOR EACH ROW
+BEGIN
+UPDATE Inventory SET quantity=quantity+NEW.quantity,lastUpdated=CURRENT_TIMESTAMP WHERE productID=NEW.productID;
+END //
+
+DELIMITER ;
+
+
+-------------------------------------ADVANCED QUERIES------------------------------
+query 1;
+
+SELECT
+    c.customerID,
+    CONCAT(c.fName, ' ', c.lName) AS customerName,
+    c.phone,
+    lc.points AS loyaltyPoints,
+    COUNT(s.saleID) AS totalOrders,
+    SUM(s.totalAmount) AS totalSpent
+FROM Customer c
+JOIN LoyaltyCard lc
+    ON c.customerID = lc.customerID
+JOIN Sale s
+    ON c.customerID = s.customerID
+GROUP BY
+    c.customerID,
+    c.fName,
+    c.lName,
+    c.phone,
+    lc.points
+ORDER BY totalSpent DESC
+LIMIT 5;
+
+query 2;
+
+
+SELECT
+    p.productID,
+    p.productName,
+    cat.categoryName,
+    p.costPrice,
+    p.unitPrice,
+    (p.unitPrice - p.costPrice) AS profitPerUnit,
+    ROUND(
+        ((p.unitPrice - p.costPrice) / p.costPrice) * 100,
+        2
+    ) AS profitMarginPercent
+FROM Product p
+JOIN Category cat
+    ON p.categoryID = cat.categoryID
+ORDER BY profitMarginPercent DESC;
+
+query 3;
+
+SELECT
+    p.productID,
+    p.productName,
+    inv.quantity AS currentStock,
+    inv.reorderLevel,
+    sup.supplierName,
+    sup.phoneNo AS supplierPhone
+FROM Inventory inv
+JOIN Product p
+    ON inv.productID = p.productID
+JOIN Supplier sup
+    ON p.supplierID = sup.supplierID
+WHERE inv.quantity <= (inv.reorderLevel + 30)
+ORDER BY inv.quantity ASC;
+
+query 4;
+SELECT
+    e.employeeID,
+    CONCAT(e.fName, ' ', e.lName) AS cashierName,
+    e.position,
+    COUNT(s.saleID) AS totalTransactions,
+    SUM(s.totalAmount) AS totalRevenueProcessed
+FROM Employee e
+JOIN Sale s
+    ON e.employeeID = s.employeeID
+GROUP BY
+    e.employeeID,
+    e.fName,
+    e.lName,
+    e.position
+HAVING totalRevenueProcessed >= 100.00
+ORDER BY totalRevenueProcessed DESC;
+
+query 5;
+
+SELECT
+    cat.categoryID,
+    cat.categoryName,
+    SUM(si.quantity) AS totalUnitsSold,
+    SUM(si.quantity * si.unitPrice) AS grossRevenue,
+    ROUND(
+        SUM(
+            si.quantity * si.unitPrice * (si.discount / 100)
+        ),
+        2
+    ) AS totalDiscountsGiven,
+    SUM(si.subTotal) AS netRevenue
+FROM Category cat
+JOIN Product p
+    ON cat.categoryID = p.categoryID
+JOIN SaleItem si
+    ON p.productID = si.productID
+GROUP BY
+    cat.categoryID,
+    cat.categoryName
+ORDER BY netRevenue DESC;;
+
+query 6;
+SELECT
+    sup.supplierID,
+    sup.supplierName,
+    COUNT(DISTINCT p.productID) AS productsSupplied,
+    SUM(inv.quantity * p.unitPrice) AS retailStockValue,
+    SUM(inv.quantity * p.costPrice) AS wholesaleStockCost
+FROM Supplier sup
+JOIN Product p
+    ON sup.supplierID = p.supplierID
+JOIN Inventory inv
+    ON p.productID = inv.productID
+GROUP BY
+    sup.supplierID,
+    sup.supplierName
+ORDER BY retailStockValue DESC;
+
+query 7;
+
+SELECT
+    d.discountID,
+    d.discountName,
+    d.discountPercent,
+    d.startDate,
+    d.endDate,
+    p.productID,
+    p.productName,
+    p.unitPrice AS originalPrice,
+    ROUND(
+        p.unitPrice * (1 - d.discountPercent / 100),
+        2
+    ) AS discountedPrice
+FROM Discount d
+JOIN ProductDiscount pd
+    ON d.discountID = pd.discountID
+JOIN Product p
+    ON pd.productID = p.productID
+ORDER BY d.discountPercent DESC;
+
+query 8;
+
+SELECT
+    paymentMethod,
+    COUNT(saleID) AS totalTransactions,
+    SUM(totalAmount) AS totalRevenue,
+    ROUND(AVG(totalAmount), 2) AS averageTransactionValue
+FROM Sale
+GROUP BY paymentMethod
+ORDER BY totalRevenue DESC;
+
+query 9;
+
+SELECT
+    p.productID,
+    p.productName,
+    si.quantity,
+    si.subTotal,
+    DENSE_RANK() OVER (
+        ORDER BY si.subTotal DESC
+    ) AS salesRank
+FROM Product p
+JOIN SaleItem si
+    ON p.productID = si.productID;
+
+query 10;
+SELECT
+    p.productID,
+    p.productName,
+    p.unitPrice,
+    inv.quantity AS stockInHand,
+    p.status
+FROM Product p
+JOIN Inventory inv
+    ON p.productID = inv.productID
+LEFT JOIN SaleItem si
+    ON p.productID = si.productID
+WHERE si.saleID IS NULL;
+
+
+
+
+
+

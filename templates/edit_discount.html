@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+
+{% block title %}
+Edit Discount — Supermarket Management System
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+
+    <div>
+
+        <h1>Edit Discount</h1>
+
+        <p>
+            Update discount information.
+        </p>
+
+    </div>
+
+</div>
+
+
+<!-- ERROR MESSAGE -->
+
+{% if error %}
+
+<div class="error">
+
+    <strong>Error:</strong>
+    {{ error }}
+
+</div>
+
+{% endif %}
+
+
+<!-- FORM -->
+
+<div class="form-container">
+
+    <form
+        method="POST"
+        action="/discounts/update/{{ discount.discountID }}"
+    >
+
+
+        <!-- ROW 1 -->
+
+        <div class="form-row">
+
+
+            <!-- DISCOUNT ID -->
+
+            <div class="form-group">
+
+                <label for="discountID">
+                    Discount ID
+                </label>
+
+                <input
+                    type="text"
+                    id="discountID"
+                    name="discountID"
+                    value="{{ discount.discountID }}"
+                    disabled
+                >
+
+                <small>
+                    Discount ID cannot be changed.
+                </small>
+
+            </div>
+
+
+            <!-- NAME -->
+
+            <div class="form-group">
+
+                <label for="discountName">
+                    Discount Name
+                </label>
+
+                <input
+                    type="text"
+                    id="discountName"
+                    name="discountName"
+                    value="{{ discount.discountName }}"
+                    maxlength="100"
+                    required
+                >
+
+            </div>
+
+        </div>
+
+
+        <!-- ROW 2 -->
+
+        <div class="form-row">
+
+
+            <!-- TYPE -->
+
+            <div class="form-group">
+
+                <label for="discountType">
+                    Discount Type
+                </label>
+
+                <select
+                    id="discountType"
+                    name="discountType"
+                    required
+                >
+
+                    <option
+                        value="Percentage"
+                        {% if discount.discountType == "Percentage" %}
+                        selected
+                        {% endif %}
+                    >
+                        Percentage
+                    </option>
+
+                    <option
+                        value="Fixed"
+                        {% if discount.discountType == "Fixed" %}
+                        selected
+                        {% endif %}
+                    >
+                        Fixed
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <!-- PERCENTAGE -->
+
+            <div class="form-group">
+
+                <label for="discountPercent">
+                    Discount Percentage
+                </label>
+
+                <input
+                    type="number"
+                    id="discountPercent"
+                    name="discountPercent"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    value="{{ discount.discountPercent }}"
+                >
+
+            </div>
+
+        </div>
+
+
+        <!-- FIXED AMOUNT -->
+
+        <div class="form-group">
+
+            <label for="fixedAmount">
+                Fixed Amount
+            </label>
+
+            <input
+                type="number"
+                id="fixedAmount"
+                name="fixedAmount"
+                min="0"
+                step="0.01"
+                value="{{ discount.fixedAmount or 0 }}"
+            >
+
+        </div>
+
+
+        <!-- DATES -->
+
+        <div class="form-row">
+
+
+            <!-- START DATE -->
+
+            <div class="form-group">
+
+                <label for="startDate">
+                    Start Date
+                </label>
+
+                <input
+                    type="date"
+                    id="startDate"
+                    name="startDate"
+                    value="{{ discount.startDate }}"
+                    required
+                >
+
+            </div>
+
+
+            <!-- END DATE -->
+
+            <div class="form-group">
+
+                <label for="endDate">
+                    End Date
+                </label>
+
+                <input
+                    type="date"
+                    id="endDate"
+                    name="endDate"
+                    value="{{ discount.endDate }}"
+                    required
+                >
+
+            </div>
+
+        </div>
+
+
+        <!-- ACTIONS -->
+
+        <div class="form-actions">
+
+            <a
+                href="/discounts"
+                class="btn btn-secondary"
+            >
+                Cancel
+            </a>
+
+            <button
+                type="submit"
+                class="btn btn-primary"
+            >
+                Save Changes
+            </button>
+
+        </div>
+
+
+    </form>
+
+</div>
+
+{% endblock %}

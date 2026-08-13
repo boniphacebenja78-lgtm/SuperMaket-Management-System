@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block title %}
+Add Customer
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+
+```
+<div>
+    <h1>Add Customer</h1>
+    <p>Add a new customer to the supermarket system.</p>
+</div>
+
+<a href="{{ url_for('customers') }}" class="btn btn-secondary">
+    Back to Customers
+</a>
+```
+
+</div>
+
+<div class="card">
+
+```
+<div class="card-header">
+    <h2>Customer Information</h2>
+</div>
+
+
+<form
+    method="POST"
+    action="{{ url_for('save_customer') }}"
+>
+
+    <div class="form-grid">
+
+        <!-- CUSTOMER ID -->
+
+        <div class="form-group">
+
+            <label for="customerID">
+                Customer ID
+            </label>
+
+            <input
+                type="text"
+                id="customerID"
+                name="customerID"
+                maxlength="10"
+                placeholder="e.g. CUST001"
+                required
+            >
+
+        </div>
+
+
+        <!-- FIRST NAME -->
+
+        <div class="form-group">
+
+            <label for="fName">
+                First Name
+            </label>
+
+            <input
+                type="text"
+                id="fName"
+                name="fName"
+                maxlength="50"
+                placeholder="Enter first name"
+                required
+            >
+
+        </div>
+
+
+        <!-- LAST NAME -->
+
+        <div class="form-group">
+
+            <label for="lName">
+                Last Name
+            </label>
+
+            <input
+                type="text"
+                id="lName"
+                name="lName"
+                maxlength="50"
+                placeholder="Enter last name"
+                required
+            >
+
+        </div>
+
+
+        <!-- PHONE -->
+
+        <div class="form-group">
+
+            <label for="phone">
+                Phone Number
+            </label>
+
+            <input
+                type="text"
+                id="phone"
+                name="phone"
+                maxlength="20"
+                placeholder="Enter phone number"
+                required
+            >
+
+        </div>
+
+
+        <!-- EMAIL -->
+
+        <div class="form-group">
+
+            <label for="email">
+                Email
+            </label>
+
+            <input
+                type="email"
+                id="email"
+                name="email"
+                maxlength="100"
+                placeholder="Enter email address"
+            >
+
+        </div>
+
+
+        <!-- ADDRESS -->
+
+        <div class="form-group form-group-full">
+
+            <label for="address">
+                Address
+            </label>
+
+            <textarea
+                id="address"
+                name="address"
+                maxlength="255"
+                rows="4"
+                placeholder="Enter customer address"
+            ></textarea>
+
+        </div>
+
+    </div>
+
+
+    <!-- FORM ACTIONS -->
+
+    <div class="form-actions">
+
+        <a
+            href="{{ url_for('customers') }}"
+            class="btn btn-secondary"
+        >
+            Cancel
+        </a>
+
+        <button
+            type="submit"
+            class="btn btn-primary"
+        >
+            Add Customer
+        </button>
+
+    </div>
+
+</form>
+```
+
+</div>
+
+{% endblock %}

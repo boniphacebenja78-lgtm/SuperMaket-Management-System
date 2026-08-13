@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Add Product - Supermarket Management System</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+</head>
+
+
+<body>
+
+
+    <!-- =========================
+         NAVIGATION
+         ========================= -->
+
+    <nav class="navbar">
+
+        <div class="logo">
+            Supermarket Management System
+        </div>
+
+        <div class="nav-links">
+
+            <a href="/">
+                Dashboard
+            </a>
+
+            <a href="/products">
+                Products
+            </a>
+
+            <a href="#">
+                Categories
+            </a>
+
+            <a href="#">
+                Customers
+            </a>
+
+            <a href="#">
+                Suppliers
+            </a>
+
+        </div>
+
+    </nav>
+
+
+    <!-- =========================
+         MAIN CONTENT
+         ========================= -->
+
+    <main class="container">
+
+
+        <div class="page-header">
+
+            <div>
+
+                <h1>
+                    Add New Product
+                </h1>
+
+                <p>
+                    Add a new product to the supermarket inventory.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- =========================
+             PRODUCT FORM
+             ========================= -->
+
+        <div class="form-container">
+
+
+            <form method="POST"
+                  action="/products/add">
+
+
+                <!-- PRODUCT ID -->
+
+                <div class="form-group">
+
+                    <label for="productID">
+                        Product ID
+                    </label>
+
+                    <input
+                        type="text"
+                        id="productID"
+                        name="productID"
+                        placeholder="Example: PRO057"
+                        required
+                    >
+
+                    <small>
+                        Enter a unique product ID.
+                    </small>
+
+                </div>
+
+
+                <!-- PRODUCT NAME -->
+
+                <div class="form-group">
+
+                    <label for="productName">
+                        Product Name
+                    </label>
+
+                    <input
+                        type="text"
+                        id="productName"
+                        name="productName"
+                        placeholder="Example: Apple Juice 1L"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- CATEGORY -->
+
+                <div class="form-group">
+
+                    <label for="categoryID">
+                        Category
+                    </label>
+
+                    <select
+                        id="categoryID"
+                        name="categoryID"
+                        required
+                    >
+
+                        <option value="">
+                            -- Select Category --
+                        </option>
+
+
+                        {% for category in categories %}
+
+                        <option value="{{ category[0] }}">
+
+                            {{ category[1] }}
+
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <!-- SUPPLIER -->
+
+                <div class="form-group">
+
+                    <label for="supplierID">
+                        Supplier
+                    </label>
+
+                    <select
+                        id="supplierID"
+                        name="supplierID"
+                        required
+                    >
+
+                        <option value="">
+                            -- Select Supplier --
+                        </option>
+
+
+                        {% for supplier in suppliers %}
+
+                        <option value="{{ supplier[0] }}">
+
+                            {{ supplier[1] }}
+
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <!-- PRICE SECTION -->
+
+                <div class="form-row">
+
+
+                    <!-- UNIT PRICE -->
+
+                    <div class="form-group">
+
+                        <label for="unitPrice">
+                            Unit Price (GH₵)
+                        </label>
+
+                        <input
+                            type="number"
+                            id="unitPrice"
+                            name="unitPrice"
+                            step="0.01"
+                            min="0"
+                            placeholder="0.00"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- COST PRICE -->
+
+                    <div class="form-group">
+
+                        <label for="costPrice">
+                            Cost Price (GH₵)
+                        </label>
+
+                        <input
+                            type="number"
+                            id="costPrice"
+                            name="costPrice"
+                            step="0.01"
+                            min="0"
+                            placeholder="0.00"
+                            required
+                        >
+
+                    </div>
+
+
+                </div>
+
+
+                <!-- EXPIRY DATE -->
+
+                <div class="form-group">
+
+                    <label for="expiryDate">
+                        Expiry Date
+                    </label>
+
+                    <input
+                        type="date"
+                        id="expiryDate"
+                        name="expiryDate"
+                    >
+
+                    <small>
+                        Leave blank if the product does not expire.
+                    </small>
+
+                </div>
+
+
+                <!-- STATUS -->
+
+                <div class="form-group">
+
+                    <label for="status">
+                        Status
+                    </label>
+
+                    <select
+                        id="status"
+                        name="status"
+                        required
+                    >
+
+                        <option value="Available">
+                            Available
+                        </option>
+
+                        <option value="Out of Stock">
+                            Out of Stock
+                        </option>
+
+                        <option value="Discontinued">
+                            Discontinued
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- BARCODE -->
+
+                <div class="form-group">
+
+                    <label for="barcode">
+                        Barcode
+                    </label>
+
+                    <input
+                        type="text"
+                        id="barcode"
+                        name="barcode"
+                        placeholder="Example: 6000000000057"
+                    >
+
+                </div>
+
+
+                <!-- BUTTONS -->
+
+                <div class="form-actions">
+
+                    <a
+                        href="/products"
+                        class="btn btn-secondary"
+                    >
+                        Cancel
+                    </a>
+
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                    >
+                        + Add Product
+                    </button>
+
+                </div>
+
+
+            </form>
+
+
+        </div>
+
+
+    </main>
+
+
+</body>
+
+</html>

@@ -1,0 +1,287 @@
+{% extends "base.html" %}
+
+{% block title %}
+Edit Product — Supermarket Management System
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+
+    <div>
+        <h1>Edit Product</h1>
+        <p>Update product information.</p>
+    </div>
+
+    <a
+        href="{{ url_for('products') }}"
+        class="btn btn-secondary"
+    >
+        ← Back to Products
+    </a>
+
+</div>
+
+
+<div class="form-container">
+
+    <form
+        method="POST"
+        action="{{ url_for('update_product', product_id=product[0]) }}"
+    >
+
+        <!-- PRODUCT ID -->
+
+        <div class="form-group">
+
+            <label>
+                Product ID
+            </label>
+
+            <input
+                type="text"
+                value="{{ product[0] }}"
+                disabled
+            >
+
+            <small>
+                Product ID cannot be changed.
+            </small>
+
+        </div>
+
+
+        <!-- PRODUCT NAME -->
+
+        <div class="form-group">
+
+            <label for="productName">
+                Product Name
+            </label>
+
+            <input
+                type="text"
+                id="productName"
+                name="productName"
+                value="{{ product[3] }}"
+                required
+            >
+
+        </div>
+
+
+        <!-- CATEGORY -->
+
+        <div class="form-group">
+
+            <label for="categoryID">
+                Category
+            </label>
+
+            <select
+                id="categoryID"
+                name="categoryID"
+                required
+            >
+
+                {% for category in categories %}
+
+                    <option
+                        value="{{ category[0] }}"
+                        {% if category[0] == product[1] %}
+                            selected
+                        {% endif %}
+                    >
+                        {{ category[1] }}
+                    </option>
+
+                {% endfor %}
+
+            </select>
+
+        </div>
+
+
+        <!-- SUPPLIER -->
+
+        <div class="form-group">
+
+            <label for="supplierID">
+                Supplier
+            </label>
+
+            <select
+                id="supplierID"
+                name="supplierID"
+                required
+            >
+
+                {% for supplier in suppliers %}
+
+                    <option
+                        value="{{ supplier[0] }}"
+                        {% if supplier[0] == product[2] %}
+                            selected
+                        {% endif %}
+                    >
+                        {{ supplier[1] }}
+                    </option>
+
+                {% endfor %}
+
+            </select>
+
+        </div>
+
+
+        <!-- PRICES -->
+
+        <div class="form-row">
+
+            <div class="form-group">
+
+                <label for="unitPrice">
+                    Unit Price (GH₵)
+                </label>
+
+                <input
+                    type="number"
+                    id="unitPrice"
+                    name="unitPrice"
+                    step="0.01"
+                    min="0"
+                    value="{{ product[4] }}"
+                    required
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="costPrice">
+                    Cost Price (GH₵)
+                </label>
+
+                <input
+                    type="number"
+                    id="costPrice"
+                    name="costPrice"
+                    step="0.01"
+                    min="0"
+                    value="{{ product[5] }}"
+                    required
+                >
+
+            </div>
+
+        </div>
+
+
+        <!-- EXPIRY DATE -->
+
+        <div class="form-group">
+
+            <label for="expiryDate">
+                Expiry Date
+            </label>
+
+            <input
+                type="date"
+                id="expiryDate"
+                name="expiryDate"
+                value="{{ product[6] if product[6] else '' }}"
+            >
+
+        </div>
+
+
+        <!-- STATUS -->
+
+        <div class="form-group">
+
+            <label for="status">
+                Status
+            </label>
+
+            <select
+                id="status"
+                name="status"
+                required
+            >
+
+                <option
+                    value="Available"
+                    {% if product[7] == "Available" %}
+                        selected
+                    {% endif %}
+                >
+                    Available
+                </option>
+
+                <option
+                    value="Out of Stock"
+                    {% if product[7] == "Out of Stock" %}
+                        selected
+                    {% endif %}
+                >
+                    Out of Stock
+                </option>
+
+                <option
+                    value="Discontinued"
+                    {% if product[7] == "Discontinued" %}
+                        selected
+                    {% endif %}
+                >
+                    Discontinued
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <!-- BARCODE -->
+
+        <div class="form-group">
+
+            <label for="barcode">
+                Barcode
+            </label>
+
+            <input
+                type="text"
+                id="barcode"
+                name="barcode"
+                value="{{ product[8] if product[8] else '' }}"
+            >
+
+        </div>
+
+
+        <!-- BUTTONS -->
+
+        <div class="form-actions">
+
+            <a
+                href="{{ url_for('products') }}"
+                class="btn btn-secondary"
+            >
+                Cancel
+            </a>
+
+            <button
+                type="submit"
+                class="btn btn-primary"
+            >
+                Save Changes
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+
+{% block title %}
+Add Discount — Supermarket Management System
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+
+    <div>
+
+        <h1>Add Discount</h1>
+
+        <p>
+            Create a new discount or promotion.
+        </p>
+
+    </div>
+
+</div>
+
+
+<!-- ERROR MESSAGE -->
+
+{% if error %}
+
+<div class="error">
+
+    <strong>Error:</strong>
+    {{ error }}
+
+</div>
+
+{% endif %}
+
+
+<!-- FORM -->
+
+<div class="form-container">
+
+    <form
+        method="POST"
+        action="/discounts/save"
+    >
+
+
+        <!-- ROW 1 -->
+
+        <div class="form-row">
+
+            <!-- DISCOUNT ID -->
+
+            <div class="form-group">
+
+                <label for="discountID">
+                    Discount ID
+                </label>
+
+                <input
+                    type="text"
+                    id="discountID"
+                    name="discountID"
+                    maxlength="10"
+                    placeholder="e.g. DIS013"
+                    required
+                >
+
+                <small>
+                    Maximum 10 characters.
+                </small>
+
+            </div>
+
+
+            <!-- DISCOUNT NAME -->
+
+            <div class="form-group">
+
+                <label for="discountName">
+                    Discount Name
+                </label>
+
+                <input
+                    type="text"
+                    id="discountName"
+                    name="discountName"
+                    maxlength="100"
+                    placeholder="Enter discount name"
+                    required
+                >
+
+            </div>
+
+        </div>
+
+
+        <!-- ROW 2 -->
+
+        <div class="form-row">
+
+            <!-- DISCOUNT TYPE -->
+
+            <div class="form-group">
+
+                <label for="discountType">
+                    Discount Type
+                </label>
+
+                <select
+                    id="discountType"
+                    name="discountType"
+                    required
+                >
+
+                    <option value="Percentage">
+                        Percentage
+                    </option>
+
+                    <option value="Fixed">
+                        Fixed
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <!-- PERCENTAGE -->
+
+            <div class="form-group">
+
+                <label for="discountPercent">
+                    Discount Percentage
+                </label>
+
+                <input
+                    type="number"
+                    id="discountPercent"
+                    name="discountPercent"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    value="0"
+                    placeholder="e.g. 10.00"
+                >
+
+                <small>
+                    Enter percentage between 0 and 100.
+                </small>
+
+            </div>
+
+        </div>
+
+
+        <!-- FIXED AMOUNT -->
+
+        <div class="form-group">
+
+            <label for="fixedAmount">
+                Fixed Amount
+            </label>
+
+            <input
+                type="number"
+                id="fixedAmount"
+                name="fixedAmount"
+                min="0"
+                step="0.01"
+                value="0.00"
+                placeholder="e.g. 20.00"
+            >
+
+            <small>
+                Used when the discount type is Fixed.
+            </small>
+
+        </div>
+
+
+        <!-- DATES -->
+
+        <div class="form-row">
+
+
+            <!-- START DATE -->
+
+            <div class="form-group">
+
+                <label for="startDate">
+                    Start Date
+                </label>
+
+                <input
+                    type="date"
+                    id="startDate"
+                    name="startDate"
+                    required
+                >
+
+            </div>
+
+
+            <!-- END DATE -->
+
+            <div class="form-group">
+
+                <label for="endDate">
+                    End Date
+                </label>
+
+                <input
+                    type="date"
+                    id="endDate"
+                    name="endDate"
+                    required
+                >
+
+            </div>
+
+        </div>
+
+
+        <!-- ACTIONS -->
+
+        <div class="form-actions">
+
+            <a
+                href="/discounts"
+                class="btn btn-secondary"
+            >
+                Cancel
+            </a>
+
+            <button
+                type="submit"
+                class="btn btn-primary"
+            >
+                Add Discount
+            </button>
+
+        </div>
+
+
+    </form>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+
+{% block title %}
+Add Stock
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+
+    <div>
+
+        <h1>Inventory Movement</h1>
+
+        <p>
+            Add or adjust stock quantities.
+        </p>
+
+    </div>
+
+    <a
+        href="{{ url_for('inventory') }}"
+        class="btn btn-secondary">
+
+        ← Back to Inventory
+
+    </a>
+
+</div>
+
+
+<div class="form-container">
+
+    <form
+        method="POST"
+        action="{{ url_for('save_stock') }}">
+
+
+        <!-- PRODUCT -->
+
+        <div class="form-group">
+
+            <label for="productID">
+                Product
+            </label>
+
+            <select
+                id="productID"
+                name="productID"
+                required>
+
+                <option value="">
+                    Select Product
+                </option>
+
+                {% for product in products %}
+
+                    <option value="{{ product[0] }}">
+
+                        {{ product[0] }}
+                        -
+                        {{ product[1] }}
+
+                    </option>
+
+                {% endfor %}
+
+            </select>
+
+        </div>
+
+
+        <!-- EMPLOYEE -->
+
+        <div class="form-group">
+
+            <label for="employeeID">
+                Employee
+            </label>
+
+            <select
+                id="employeeID"
+                name="employeeID"
+                required>
+
+                <option value="">
+                    Select Employee
+                </option>
+
+                {% for employee in employees %}
+
+                    <option value="{{ employee[0] }}">
+
+                        {{ employee[0] }}
+                        -
+                        {{ employee[1] }}
+                        {{ employee[2] }}
+
+                    </option>
+
+                {% endfor %}
+
+            </select>
+
+        </div>
+
+
+        <!-- MOVEMENT TYPE -->
+
+        <div class="form-group">
+
+            <label for="movementType">
+                Movement Type
+            </label>
+
+            <select
+                id="movementType"
+                name="movementType"
+                required>
+
+                <option value="">
+                    Select Movement
+                </option>
+
+                <option value="Purchase">
+                    Purchase
+                </option>
+
+                <option value="Sale">
+                    Sale
+                </option>
+
+                <option value="Return">
+                    Return
+                </option>
+
+                <option value="Damage">
+                    Damage
+                </option>
+
+                <option value="Expiry">
+                    Expiry
+                </option>
+
+                <option value="Adjustment">
+                    Adjustment
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <!-- QUANTITY -->
+
+        <div class="form-group">
+
+            <label for="quantity">
+                Quantity
+            </label>
+
+            <input
+                type="number"
+                id="quantity"
+                name="quantity"
+                min="1"
+                required
+                placeholder="Enter quantity"
+            >
+
+        </div>
+
+
+        <!-- REFERENCE -->
+
+        <div class="form-group">
+
+            <label for="referenceID">
+                Reference ID
+                <span class="optional">
+                    (Optional)
+                </span>
+            </label>
+
+            <input
+                type="text"
+                id="referenceID"
+                name="referenceID"
+                maxlength="10"
+                placeholder="e.g. PUR001"
+            >
+
+        </div>
+
+
+        <!-- BUTTONS -->
+
+        <div class="form-actions">
+
+            <a
+                href="{{ url_for('inventory') }}"
+                class="btn btn-secondary">
+
+                Cancel
+
+            </a>
+
+
+            <button
+                type="submit"
+                class="btn btn-primary">
+
+                Save Movement
+
+            </button>
+
+        </div>
+
+
+    </form>
+
+</div>
+
+{% endblock %}

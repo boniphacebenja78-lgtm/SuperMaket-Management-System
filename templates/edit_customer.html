@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+
+{% block title %}
+Edit Customer
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+
+    <div>
+
+        <h1>
+            Edit Customer
+        </h1>
+
+        <p>
+            Update customer information.
+        </p>
+
+    </div>
+
+
+    <a
+        href="{{ url_for('customers') }}"
+        class="btn btn-secondary"
+    >
+        Back to Customers
+    </a>
+
+</div>
+
+
+<div class="card edit-form-card">
+
+    <div class="card-header">
+
+        <h2>
+            Customer Information
+        </h2>
+
+    </div>
+
+
+    <form
+        method="POST"
+        action="{{ url_for(
+            'update_customer',
+            customer_id=customer[0]
+        ) }}"
+    >
+
+        <div class="form-grid">
+
+
+            <!-- CUSTOMER ID -->
+
+            <div class="form-group">
+
+                <label for="customerID">
+                    Customer ID
+                </label>
+
+                <input
+                    type="text"
+                    id="customerID"
+                    value="{{ customer[0] }}"
+                    disabled
+                >
+
+            </div>
+
+
+            <!-- FIRST NAME -->
+
+            <div class="form-group">
+
+                <label for="fName">
+                    First Name
+                </label>
+
+                <input
+                    type="text"
+                    id="fName"
+                    name="fName"
+                    maxlength="50"
+                    value="{{ customer[1] }}"
+                    required
+                >
+
+            </div>
+
+
+            <!-- LAST NAME -->
+
+            <div class="form-group">
+
+                <label for="lName">
+                    Last Name
+                </label>
+
+                <input
+                    type="text"
+                    id="lName"
+                    name="lName"
+                    maxlength="50"
+                    value="{{ customer[2] }}"
+                    required
+                >
+
+            </div>
+
+
+            <!-- PHONE -->
+
+            <div class="form-group">
+
+                <label for="phone">
+                    Phone Number
+                </label>
+
+                <input
+                    type="text"
+                    id="phone"
+                    name="phone"
+                    maxlength="20"
+                    value="{{ customer[5] }}"
+                    required
+                >
+
+            </div>
+
+
+            <!-- EMAIL -->
+
+            <div class="form-group">
+
+                <label for="email">
+                    Email
+                </label>
+
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    maxlength="100"
+                    value="{{ customer[3] or '' }}"
+                >
+
+            </div>
+
+
+            <!-- ADDRESS -->
+
+            <div class="form-group form-group-full">
+
+                <label for="address">
+                    Address
+                </label>
+
+                <textarea
+                    id="address"
+                    name="address"
+                    maxlength="255"
+                    rows="4"
+                >{{ customer[4] or '' }}</textarea>
+
+            </div>
+
+
+        </div>
+
+
+        <div class="form-actions">
+
+            <a
+                href="{{ url_for('customers') }}"
+                class="btn btn-secondary"
+            >
+                Cancel
+            </a>
+
+
+            <button
+                type="submit"
+                class="btn btn-primary"
+            >
+                Save Changes
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+
+{% block title %}
+Employees
+{% endblock %}
+
+{% block content %}
+
+<!-- ==========================================
+     PAGE HEADER
+     ========================================== -->
+
+<div class="page-header">
+
+    <div>
+
+        <h1>
+            Employees
+        </h1>
+
+        <p>
+            Manage supermarket employees
+        </p>
+
+    </div>
+
+
+    <a
+        href="{{ url_for('add_employee') }}"
+        class="btn btn-primary"
+    >
+        + Add Employee
+    </a>
+
+</div>
+
+
+<!-- ==========================================
+     SUMMARY CARDS
+     ========================================== -->
+
+<div class="summary-cards">
+
+
+    <div class="summary-card">
+
+        <div class="summary-title">
+            Total Employees
+        </div>
+
+        <div class="summary-number">
+            {{ total_employees }}
+        </div>
+
+    </div>
+
+
+    <div class="summary-card">
+
+        <div class="summary-title">
+            Active Employees
+        </div>
+
+        <div class="summary-number">
+            {{ active_employees }}
+        </div>
+
+    </div>
+
+
+    <div class="summary-card">
+
+        <div class="summary-title">
+            Inactive Employees
+        </div>
+
+        <div class="summary-number">
+            {{ inactive_employees }}
+        </div>
+
+    </div>
+
+
+</div>
+
+
+<!-- ==========================================
+     SEARCH
+     ========================================== -->
+
+<div class="search-section">
+
+    <form method="GET"
+          action="{{ url_for('employees') }}">
+
+        <input
+            type="text"
+            name="search"
+            value="{{ search }}"
+            placeholder="Search employees..."
+        >
+
+        <button
+            type="submit"
+            class="btn btn-search"
+        >
+            Search
+        </button>
+
+    </form>
+
+</div>
+
+
+<!-- ==========================================
+     EMPLOYEE TABLE
+     ========================================== -->
+
+<div class="table-container">
+
+    {% if employees %}
+
+    <table>
+
+        <thead>
+
+            <tr>
+
+                <th>
+                    Employee ID
+                </th>
+
+                <th>
+                    Name
+                </th>
+
+                <th>
+                    Position
+                </th>
+
+                <th>
+                    Phone
+                </th>
+
+                <th>
+                    Email
+                </th>
+
+                <th>
+                    Hire Date
+                </th>
+
+                <th>
+                    Status
+                </th>
+
+                <th>
+                    Actions
+                </th>
+
+            </tr>
+
+        </thead>
+
+
+        <tbody>
+
+        {% for employee in employees %}
+
+            <tr>
+
+                <td>
+                    <strong>
+                        {{ employee[0] }}
+                    </strong>
+                </td>
+
+
+                <td>
+                    {{ employee[1] }}
+                    {{ employee[2] }}
+                </td>
+
+
+                <td>
+                    {{ employee[3] }}
+                </td>
+
+
+                <td>
+                    {{ employee[4] }}
+                </td>
+
+
+                <td>
+                    {{ employee[5] or "—" }}
+                </td>
+
+
+                <td>
+                    {{ employee[6] }}
+                </td>
+
+
+                <td>
+
+                    {% if employee[7] == "Active" %}
+
+                        <span class="status-badge">
+                            Active
+                        </span>
+
+                    {% else %}
+
+                        <span class="status-badge status-inactive">
+                            Inactive
+                        </span>
+
+                    {% endif %}
+
+                </td>
+
+
+                <td>
+
+                    <div class="action-buttons">
+
+                        <a
+                            href="{{ url_for(
+                                'edit_employee',
+                                employee_id=employee[0]
+                            ) }}"
+                            class="btn btn-edit"
+                        >
+                            Edit
+                        </a>
+
+
+                        <form
+                            method="POST"
+                            action="{{ url_for(
+                                'delete_employee',
+                                employee_id=employee[0]
+                            ) }}"
+                            onsubmit="return confirm(
+                                'Are you sure you want to delete or deactivate this employee?'
+                            );"
+                        >
+
+                            <button
+                                type="submit"
+                                class="btn btn-delete"
+                            >
+                                Delete
+                            </button>
+
+                        </form>
+
+                    </div>
+
+                </td>
+
+            </tr>
+
+        {% endfor %}
+
+        </tbody>
+
+    </table>
+
+    {% else %}
+
+        <div class="no-products">
+
+            <h3>
+                No employees found
+            </h3>
+
+            <p>
+                Try another search or add a new employee.
+            </p>
+
+        </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

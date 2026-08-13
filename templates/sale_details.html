@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+
+{% block title %}
+Sale Details — Supermarket Management System
+{% endblock %}
+
+{% block content %}
+
+<div class="sales-page">
+
+    <!-- PAGE HEADER -->
+    <div class="page-header">
+
+        <div>
+
+            <h1>Sale Details</h1>
+
+            <p>
+                Details for sale {{ sale.saleID }}
+            </p>
+
+        </div>
+
+        <a
+            href="/sales"
+            class="btn btn-secondary"
+        >
+            Back to Sales
+        </a>
+
+    </div>
+
+
+    <!-- SALE INFORMATION -->
+
+    <div class="form-container">
+
+        <div class="form-row">
+
+            <div class="form-group">
+
+                <label>Sale ID</label>
+
+                <input
+                    type="text"
+                    value="{{ sale.saleID }}"
+                    disabled
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>Date</label>
+
+                <input
+                    type="text"
+                    value="{{ sale.saleDate }}"
+                    disabled
+                >
+
+            </div>
+
+        </div>
+
+
+        <div class="form-row">
+
+            <div class="form-group">
+
+                <label>Customer</label>
+
+                <input
+                    type="text"
+                    value="{{ sale.customerName or 'Walk-in Customer' }}"
+                    disabled
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>Employee</label>
+
+                <input
+                    type="text"
+                    value="{{ sale.employeeName or sale.employeeID }}"
+                    disabled
+                >
+
+            </div>
+
+        </div>
+
+
+        <div class="form-row">
+
+            <div class="form-group">
+
+                <label>Payment Method</label>
+
+                <input
+                    type="text"
+                    value="{{ sale.paymentMethod }}"
+                    disabled
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>Tax Amount</label>
+
+                <input
+                    type="text"
+                    value="{{ '%.2f'|format(sale.taxAmount or 0) }}"
+                    disabled
+                >
+
+            </div>
+
+        </div>
+
+
+        <div class="form-row">
+
+            <div class="form-group">
+
+                <label>Total Amount</label>
+
+                <input
+                    type="text"
+                    value="{{ '%.2f'|format(sale.totalAmount or 0) }}"
+                    disabled
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>Points Redeemed</label>
+
+                <input
+                    type="text"
+                    value="{{ sale.pointsRedeemed or 0 }}"
+                    disabled
+                >
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ITEMS -->
+
+    <div class="page-header">
+
+        <div>
+
+            <h2>Items Purchased</h2>
+
+            <p>
+                Products included in this sale.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <div class="table-container">
+
+        {% if items %}
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>Product ID</th>
+                    <th>Product Name</th>
+                    <th>Quantity</th>
+                    <th>Unit Price</th>
+                    <th>Discount</th>
+                    <th>Subtotal</th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% for item in items %}
+
+                <tr>
+
+                    <td>
+                        {{ item.productID }}
+                    </td>
+
+
+                    <td>
+                        {{ item.productName }}
+                    </td>
+
+
+                    <td>
+                        {{ item.quantity }}
+                    </td>
+
+
+                    <td>
+                        {{ "%.2f"|format(item.unitPrice) }}
+                    </td>
+
+
+                    <td>
+                        {{ "%.2f"|format(item.discount or 0) }}%
+                    </td>
+
+
+                    <td>
+
+                        <strong>
+                            {{ "%.2f"|format(item.subTotal or 0) }}
+                        </strong>
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+        {% else %}
+
+        <div class="no-products">
+
+            <h3>No Items Found</h3>
+
+            <p>
+                No products were recorded for this sale.
+            </p>
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}

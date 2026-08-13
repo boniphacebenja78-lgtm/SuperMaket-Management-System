@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}
+Add Category
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+
+```
+<div>
+    <h1>Add Category</h1>
+    <p>Create a new product category.</p>
+</div>
+
+<a
+    href="{{ url_for('categories') }}"
+    class="btn btn-secondary"
+>
+    Back to Categories
+</a>
+```
+
+</div>
+
+<div class="card">
+
+```
+<div class="card-header">
+    <h2>Category Information</h2>
+</div>
+
+
+<form
+    method="POST"
+    action="{{ url_for('save_category') }}"
+>
+
+    <div class="form-grid">
+
+        <div class="form-group">
+
+            <label for="categoryID">
+                Category ID
+            </label>
+
+            <input
+                type="text"
+                id="categoryID"
+                name="categoryID"
+                maxlength="10"
+                placeholder="e.g. CAT015"
+                required
+            >
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label for="categoryName">
+                Category Name
+            </label>
+
+            <input
+                type="text"
+                id="categoryName"
+                name="categoryName"
+                maxlength="100"
+                placeholder="e.g. Frozen Foods"
+                required
+            >
+
+        </div>
+
+
+        <div class="form-group form-group-full">
+
+            <label for="description">
+                Description
+            </label>
+
+            <textarea
+                id="description"
+                name="description"
+                maxlength="255"
+                rows="5"
+                placeholder="Describe this category..."
+            ></textarea>
+
+        </div>
+
+    </div>
+
+
+    <div class="form-actions">
+
+        <a
+            href="{{ url_for('categories') }}"
+            class="btn btn-secondary"
+        >
+            Cancel
+        </a>
+
+        <button
+            type="submit"
+            class="btn btn-primary"
+        >
+            Add Category
+        </button>
+
+    </div>
+
+</form>
+```
+
+</div>
+
+{% endblock %}

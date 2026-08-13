@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+
+{% block title %}
+Add Loyalty Card — Supermarket Management System
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+
+    <div>
+
+        <h1>Add Loyalty Card</h1>
+
+        <p>
+            Create a loyalty card for a customer.
+        </p>
+
+    </div>
+
+</div>
+
+
+<!-- ERROR -->
+
+{% if error %}
+
+<div class="error">
+
+    <strong>Error:</strong>
+    {{ error }}
+
+</div>
+
+{% endif %}
+
+
+<!-- FORM -->
+
+<div class="form-container">
+
+    <form method="POST" action="/loyalty-cards/save">
+
+
+        <!-- CARD ID + CUSTOMER -->
+
+        <div class="form-row">
+
+
+            <!-- CARD ID -->
+
+            <div class="form-group">
+
+                <label for="cardID">
+                    Card ID
+                </label>
+
+                <input
+                    type="text"
+                    id="cardID"
+                    name="cardID"
+                    maxlength="10"
+                    placeholder="e.g. CARD001"
+                    required
+                >
+
+                <small>
+                    Maximum 10 characters.
+                </small>
+
+            </div>
+
+
+            <!-- CUSTOMER -->
+
+            <div class="form-group">
+
+                <label for="customerID">
+                    Customer
+                </label>
+
+                <select
+                    id="customerID"
+                    name="customerID"
+                    required
+                >
+
+                    <option value="">
+                        Select Customer
+                    </option>
+
+                    {% for customer in customers %}
+
+                    <option value="{{ customer.customerID }}">
+
+                        {{ customer.customerID }}
+                        -
+                        {{ customer.fName }}
+                        {{ customer.lName }}
+
+                    </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+        </div>
+
+
+        <!-- POINTS + STATUS -->
+
+        <div class="form-row">
+
+
+            <!-- POINTS -->
+
+            <div class="form-group">
+
+                <label for="points">
+                    Points
+                </label>
+
+                <input
+                    type="number"
+                    id="points"
+                    name="points"
+                    min="0"
+                    value="0"
+                    required
+                >
+
+            </div>
+
+
+            <!-- STATUS -->
+
+            <div class="form-group">
+
+                <label for="status">
+                    Status
+                </label>
+
+                <select
+                    id="status"
+                    name="status"
+                    required
+                >
+
+                    <option value="Active">
+                        Active
+                    </option>
+
+                    <option value="Expired">
+                        Expired
+                    </option>
+
+                    <option value="Suspended">
+                        Suspended
+                    </option>
+
+                </select>
+
+            </div>
+
+        </div>
+
+
+        <!-- DATES -->
+
+        <div class="form-row">
+
+
+            <!-- ISSUE DATE -->
+
+            <div class="form-group">
+
+                <label for="issueDate">
+                    Issue Date
+                </label>
+
+                <input
+                    type="date"
+                    id="issueDate"
+                    name="issueDate"
+                    required
+                >
+
+            </div>
+
+
+            <!-- EXPIRY DATE -->
+
+            <div class="form-group">
+
+                <label for="expiryDate">
+                    Expiry Date
+                </label>
+
+                <input
+                    type="date"
+                    id="expiryDate"
+                    name="expiryDate"
+                    required
+                >
+
+            </div>
+
+        </div>
+
+
+        <!-- ACTIONS -->
+
+        <div class="form-actions">
+
+            <a
+                href="/loyalty-cards"
+                class="btn btn-secondary"
+            >
+                Cancel
+            </a>
+
+
+            <button
+                type="submit"
+                class="btn btn-primary"
+            >
+                Add Loyalty Card
+            </button>
+
+        </div>
+
+
+    </form>
+
+</div>
+
+{% endblock %}
