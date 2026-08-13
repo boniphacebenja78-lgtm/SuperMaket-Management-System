@@ -3071,45 +3071,38 @@ body {
 }
 
 
-/* =========================================================
-   CUSTOMER STATISTICS
-   ========================================================= */
+/* =========================================
+   CUSTOMER / CATEGORY STATISTICS
+   ========================================= */
 
-.customer-stats-grid {
-
+.stats-grid {
     display: grid;
-
-    grid-template-columns:
-        repeat(3, minmax(0, 1fr));
-
-    gap: 18px;
-
-    margin-bottom: 22px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+    width: 100%;
+    margin: 25px 0 30px 0;
+    align-items: stretch;
 }
 
 
-.customer-stat-card {
+/* =========================================
+   STAT CARD
+   ========================================= */
 
-    background: white;
+.stat-card {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+
+    background: #ffffff;
 
     border: 1px solid #e5e7eb;
-
     border-radius: 14px;
 
-    padding: 21px;
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 16px;
-
-    position: relative;
-
-    overflow: hidden;
+    padding: 24px;
 
     box-shadow:
-        0 4px 14px rgba(15, 23, 42, 0.04);
+        0 4px 14px rgba(15, 23, 42, 0.06);
 
     transition:
         transform 0.2s ease,
@@ -3117,39 +3110,120 @@ body {
 }
 
 
-.customer-stat-card::before {
+.stat-card:hover {
 
-    content: "";
-
-    position: absolute;
-
-    top: 0;
-
-    left: 0;
-
-    width: 100%;
-
-    height: 4px;
-
-    background:
-        linear-gradient(
-            90deg,
-            #2563eb,
-            #60a5fa
-        );
-}
-
-
-.customer-stat-card:hover {
-
-    transform:
-        translateY(-3px);
+    transform: translateY(-2px);
 
     box-shadow:
-        0 9px 22px rgba(15, 23, 42, 0.08);
+        0 8px 20px rgba(15, 23, 42, 0.09);
 }
 
 
+/* =========================================
+   STAT CARD CONTENT
+   ========================================= */
+
+.stat-card-content {
+
+    width: 100%;
+}
+
+
+/* TITLE */
+
+.stat-card h3 {
+
+    margin: 0 0 10px 0;
+
+    color: #0b2a4a;
+
+    font-size: 15px;
+
+    font-weight: 700;
+}
+
+
+/* NUMBER */
+
+.stat-number {
+
+    margin: 0 0 8px 0;
+
+    color: #0b2a4a;
+
+    font-size: 32px;
+
+    font-weight: 800;
+
+    line-height: 1.1;
+}
+
+
+/* DESCRIPTION */
+
+.stat-card p {
+
+    margin: 0;
+
+    color: #64748b;
+
+    font-size: 13px;
+
+    line-height: 1.5;
+}
+
+
+/* =========================================
+   DESKTOP
+   ========================================= */
+
+@media (min-width: 901px) {
+
+    .stats-grid {
+
+        grid-template-columns:
+            repeat(3, minmax(0, 1fr));
+    }
+
+}
+
+
+/* =========================================
+   TABLET
+   ========================================= */
+
+@media (max-width: 900px) {
+
+    .stats-grid {
+
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+
+        gap: 18px;
+    }
+
+}
+
+
+/* =========================================
+   MOBILE
+   ========================================= */
+
+@media (max-width: 600px) {
+
+    .stats-grid {
+
+        grid-template-columns: 1fr;
+
+        gap: 16px;
+    }
+
+    .stat-card {
+
+        padding: 20px;
+    }
+
+}
 /* =========================================================
    CUSTOMER STAT ICON
    ========================================================= */
@@ -4064,274 +4138,1714 @@ body {
 
 }
 /* =========================================================
-   EDIT CATEGORY / EDIT CUSTOMER FORMS
-   PROFESSIONAL FORM DESIGN
+   FINAL SUPERMARKET COLOR THEME
+   DARK BLUE + ORANGE
    ========================================================= */
 
 
 /* =========================================================
-   FORM GRID
+   COLOR SYSTEM
+
+   DARK NAVY  = #0f2747
+   DEEP BLUE  = #163a63
+   BLUE       = #1e4f85
+   ORANGE     = #f97316
+   LIGHT BG   = #f4f7fb
+   WHITE      = #ffffff
+   DARK TEXT  = #0f2747
+   NUMBER     = #0b1f35
+
+   IMPORTANT:
+   ORANGE IS ONLY AN ACCENT.
+   NO NORMAL WORDS OR NUMBERS ARE ORANGE.
    ========================================================= */
 
-.form-grid {
 
-    display: grid;
+/* =========================================================
+   GLOBAL
+   ========================================================= */
 
-    grid-template-columns:
-        repeat(2, minmax(0, 1fr));
-
-    gap: 22px;
-
-    width: 100%;
+body {
+    background: #f4f7fb;
+    color: #0f2747;
 }
 
 
 /* =========================================================
-   FULL WIDTH FORM GROUP
+   TOP HEADER
    ========================================================= */
 
-.form-group-full {
+.top-header {
+    background: linear-gradient(
+        135deg,
+        #0b1f35,
+        #163a63
+    );
 
-    grid-column: 1 / -1;
-
-}
-
-
-/* =========================================================
-   EDIT FORM CARD
-   ========================================================= */
-
-.card {
-
-    width: 100%;
-
-    background: #ffffff;
-
-    border: 1px solid #e5e7eb;
-
-    border-radius: 14px;
+    color: #ffffff;
 
     box-shadow:
-        0 4px 16px rgba(15, 23, 42, 0.06);
-
-    overflow: hidden;
-
+        0 3px 14px rgba(15, 39, 71, 0.20);
 }
 
 
 /* =========================================================
-   CARD HEADER
+   BRAND
    ========================================================= */
 
-.card-header {
+.brand-icon {
+    background: linear-gradient(
+        135deg,
+        #f97316,
+        #ea580c
+    );
 
-    display: flex;
+    color: #ffffff;
 
-    align-items: center;
+    box-shadow:
+        0 5px 14px rgba(249, 115, 22, 0.30);
+}
 
-    justify-content: space-between;
 
-    padding: 22px 26px;
+.brand-text h1 {
+    color: #ffffff;
+}
 
+
+.brand-text span {
+    color: #a9bdd2;
+}
+
+
+/* =========================================================
+   ADMINISTRATOR
+   ========================================================= */
+
+.admin-avatar {
+    background: #f97316;
+
+    color: #ffffff;
+
+    border:
+        2px solid rgba(255, 255, 255, 0.20);
+
+    box-shadow:
+        0 3px 10px rgba(249, 115, 22, 0.25);
+}
+
+
+.admin-info strong {
+    color: #ffffff;
+}
+
+
+.admin-info span {
+    color: #a9bdd2;
+}
+
+
+/* =========================================================
+   SIDEBAR
+   ========================================================= */
+
+.sidebar {
+    background: #0f2747;
+
+    color: #ffffff;
+
+    border-right:
+        1px solid #1d4168;
+}
+
+
+.sidebar-title {
+    color: #91a9c1;
+}
+
+
+/* =========================================================
+   SIDEBAR LINKS
+   ========================================================= */
+
+.sidebar-link {
+    color: #c5d3e2;
+}
+
+
+.sidebar-link:hover {
+    background: #163a63;
+
+    color: #ffffff;
+}
+
+
+.sidebar-link.active {
+    background: linear-gradient(
+        90deg,
+        #f97316,
+        #ea580c
+    );
+
+    color: #ffffff;
+
+    box-shadow:
+        0 5px 14px rgba(249, 115, 22, 0.25);
+}
+
+
+.sidebar-link.active:hover {
+    background: linear-gradient(
+        90deg,
+        #f97316,
+        #ea580c
+    );
+
+    color: #ffffff;
+}
+
+
+.menu-icon {
+    color: #91a9c1;
+}
+
+
+.sidebar-link.active .menu-icon {
+    color: #ffffff;
+}
+
+
+.sidebar-bottom {
+    border-top:
+        1px solid #1d4168;
+}
+
+
+/* =========================================================
+   LOGOUT
+   ========================================================= */
+
+.logout-link:hover {
+    background: #b91c1c;
+
+    color: #ffffff;
+}
+
+
+/* =========================================================
+   MAIN CONTENT
+   ========================================================= */
+
+.main-content {
+    background: #f4f7fb;
+}
+
+
+.content-wrapper {
+    max-width: 1500px;
+}
+
+
+/* =========================================================
+   PAGE HEADERS
+   ========================================================= */
+
+.page-header {
     background: #ffffff;
 
+    border:
+        1px solid #dce5ef;
+
+    box-shadow:
+        0 4px 15px rgba(15, 39, 71, 0.06);
+}
+
+
+.page-header h1 {
+    color: #0f2747;
+}
+
+
+.page-header p {
+    color: #5d7187;
+}
+
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+
+.btn {
+    color: #ffffff;
+}
+
+
+/* MAIN ORANGE BUTTON */
+
+.btn-primary {
+    background: #f97316;
+
+    color: #ffffff;
+
+    box-shadow:
+        0 4px 10px rgba(249, 115, 22, 0.20);
+}
+
+
+.btn-primary:hover {
+    background: #ea580c;
+
+    color: #ffffff;
+}
+
+
+/* SEARCH */
+
+.btn-search {
+    background: #163a63;
+
+    color: #ffffff;
+}
+
+
+.btn-search:hover {
+    background: #0f2747;
+
+    color: #ffffff;
+}
+
+
+/* EDIT */
+
+.btn-edit {
+    background: #1e4f85;
+
+    color: #ffffff;
+}
+
+
+.btn-edit:hover {
+    background: #163a63;
+
+    color: #ffffff;
+}
+
+
+/* DELETE */
+
+.btn-delete {
+    background: #dc2626;
+
+    color: #ffffff;
+}
+
+
+.btn-delete:hover {
+    background: #b91c1c;
+
+    color: #ffffff;
+}
+
+
+/* SECONDARY */
+
+.btn-secondary {
+    background: #64748b;
+
+    color: #ffffff;
+}
+
+
+.btn-secondary:hover {
+    background: #475569;
+
+    color: #ffffff;
+}
+
+
+/* =========================================================
+   GENERAL CARDS
+   ========================================================= */
+
+.card,
+.welcome,
+.search-section,
+.table-container,
+.form-container,
+.inventory-card,
+.summary-card {
+    background: #ffffff;
+
+    border:
+        1px solid #dce5ef;
+
+    box-shadow:
+        0 4px 15px rgba(15, 39, 71, 0.05);
+}
+
+
+.card:hover {
+    box-shadow:
+        0 8px 22px rgba(15, 39, 71, 0.08);
+}
+
+
+/* =========================================================
+   GENERAL TEXT
+   ========================================================= */
+
+.card h3,
+.welcome h2,
+.form-group label,
+.inventory-card-title,
+.summary-title {
+    color: #0f2747;
+}
+
+
+.card p,
+.welcome p,
+.product-summary {
+    color: #5d7187;
+}
+
+
+.number,
+.inventory-number,
+.summary-number {
+    color: #0b1f35;
+}
+
+
+/* =========================================================
+   DASHBOARD MAIN CARDS
+   ========================================================= */
+
+.dashboard-card {
+    background: #ffffff;
+
+    border:
+        1px solid #dce5ef;
+
+    box-shadow:
+        0 5px 16px rgba(15, 39, 71, 0.06);
+}
+
+
+/* ORANGE ACCENT ONLY */
+
+.dashboard-card::before {
+    background: #f97316;
+}
+
+
+.dashboard-card:hover {
+    border-color: #f7c9a8;
+
+    box-shadow:
+        0 10px 26px rgba(15, 39, 71, 0.10);
+}
+
+
+/* =========================================================
+   DASHBOARD CARD TEXT
+   ========================================================= */
+
+.dashboard-card-title {
+    color: #0f2747;
+}
+
+
+.dashboard-number {
+    color: #0b1f35;
+}
+
+
+.dashboard-description {
+    color: #5d7187;
+}
+
+
+/* =========================================================
+   DASHBOARD ICONS
+   ========================================================= */
+
+.dashboard-card-icon {
+    background: #fff3e8;
+
+    color: #163a63;
+
+    border:
+        1px solid #fed7aa;
+}
+
+
+/* Orange accent icon border */
+
+.dashboard-card-icon {
+    box-shadow:
+        inset 3px 0 0 #f97316;
+}
+
+
+/* =========================================================
+   DASHBOARD LINKS
+   ========================================================= */
+
+.dashboard-card-link {
+    color: #163a63;
+}
+
+
+.dashboard-card-link:hover {
+    color: #0f2747;
+}
+
+
+/* =========================================================
+   SECONDARY DASHBOARD CARDS
+   ========================================================= */
+
+.info-card {
+    background: #ffffff;
+
+    border:
+        1px solid #dce5ef;
+
+    box-shadow:
+        0 4px 15px rgba(15, 39, 71, 0.05);
+}
+
+
+.info-card-header h3 {
+    color: #0f2747;
+}
+
+
+.info-card-icon {
+    background: #f1f5f9;
+
+    color: #163a63;
+}
+
+
+.info-number {
+    color: #0b1f35;
+}
+
+
+/* LOW STOCK */
+
+.info-card:first-child {
+    border-left:
+        4px solid #f97316;
+}
+
+
+.info-card:first-child .info-card-icon {
+    background: #fff3e8;
+
+    color: #163a63;
+}
+
+
+/* REVENUE */
+
+.info-card:nth-child(2) {
+    border-left:
+        4px solid #16a34a;
+}
+
+
+.info-card:nth-child(2) .info-card-icon {
+    background: #f0fdf4;
+
+    color: #166534;
+}
+
+
+/* SALES */
+
+.info-card:nth-child(3) {
+    border-left:
+        4px solid #1e4f85;
+}
+
+
+.info-card:nth-child(3) .info-card-icon {
+    background: #eff6ff;
+
+    color: #163a63;
+}
+
+
+/* =========================================================
+   CONTENT CARDS
+   ========================================================= */
+
+.content-card {
+    background: #ffffff;
+
+    border:
+        1px solid #dce5ef;
+
+    box-shadow:
+        0 4px 15px rgba(15, 39, 71, 0.05);
+}
+
+
+.content-card-header {
     border-bottom:
-        1px solid #eef2f7;
+        1px solid #e3eaf2;
 }
 
 
-.card-header h2 {
-
-    margin: 0;
-
-    color: #111827;
-
-    font-size: 18px;
-
-    font-weight: 800;
-
+.content-card-header h2 {
+    color: #0f2747;
 }
 
 
 /* =========================================================
-   EDIT FORM
+   TABLES
    ========================================================= */
 
-.card form {
+.table-container th,
+.categories-page th,
+.customer-table th {
+    background: #eef4f9;
 
-    padding: 26px;
+    color: #163a63;
 
+    border-bottom:
+        2px solid #d7e2ed;
+}
+
+
+.table-container td,
+.categories-page td,
+.customer-table td {
+    color: #203b57;
+
+    border-bottom:
+        1px solid #e6edf4;
+}
+
+
+.table-container tbody tr:hover,
+.categories-page tbody tr:hover,
+.customer-table tbody tr:hover {
+    background: #f7fafc;
 }
 
 
 /* =========================================================
-   FORM GROUP
+   TABLE HEADERS — ORANGE ACCENT
    ========================================================= */
 
-.card .form-group {
-
-    margin-bottom: 0;
-
-}
-
-
-.card .form-group label {
-
-    display: block;
-
-    margin-bottom: 8px;
-
-    color: #374151;
-
-    font-size: 13px;
-
-    font-weight: 700;
-
+.table-container th:first-child,
+.categories-page th:first-child,
+.customer-table th:first-child {
+    border-left:
+        3px solid #f97316;
 }
 
 
 /* =========================================================
-   INPUTS
+   SEARCH INPUTS
    ========================================================= */
 
+.search-section input,
+.categories-page .search-form input,
+.customer-search-input,
+.form-group input,
+.form-group select,
+.form-group textarea,
+.form-container input,
+.form-container select,
+.form-container textarea,
+.edit-form-group input,
+.edit-form-group select,
+.edit-form-group textarea,
 .card .form-group input,
 .card .form-group select,
 .card .form-group textarea {
-
-    width: 100%;
-
-    padding: 12px 14px;
-
-    border:
-        1px solid #d1d5db;
-
-    border-radius: 8px;
+    color: #0f2747;
 
     background: #ffffff;
 
-    color: #1f2937;
-
-    font-family: inherit;
-
-    font-size: 13px;
-
-    transition:
-        border-color 0.2s ease,
-        box-shadow 0.2s ease,
-        background 0.2s ease;
-
+    border:
+        1px solid #cbd8e5;
 }
 
 
-/* =========================================================
-   INPUT HOVER
-   ========================================================= */
-
-.card .form-group input:hover,
-.card .form-group select:hover,
-.card .form-group textarea:hover {
-
-    border-color: #9ca3af;
-
-}
-
-
-/* =========================================================
-   INPUT FOCUS
-   ========================================================= */
-
+.search-section input:focus,
+.categories-page .search-form input:focus,
+.customer-search-input:focus,
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus,
+.form-container input:focus,
+.form-container select:focus,
+.form-container textarea:focus,
+.edit-form-group input:focus,
+.edit-form-group select:focus,
+.edit-form-group textarea:focus,
 .card .form-group input:focus,
 .card .form-group select:focus,
 .card .form-group textarea:focus {
+    border-color: #f97316;
+
+    box-shadow:
+        0 0 0 3px rgba(249, 115, 22, 0.12);
+}
+
+
+/* =========================================================
+   FORM LABELS
+   ========================================================= */
+
+.form-group label,
+.form-container .form-group label,
+.edit-form-group label,
+.card .form-group label {
+    color: #0f2747;
+}
+
+
+/* =========================================================
+   FORM HELP TEXT
+   ========================================================= */
+
+.form-group small,
+.form-container small,
+.edit-form-group small {
+    color: #71859a;
+}
+
+
+/* =========================================================
+   FORM BORDERS
+   ========================================================= */
+
+.form-actions,
+.form-container .form-actions,
+.edit-form-actions,
+.card .form-actions {
+    border-top:
+        1px solid #dce5ef;
+}
+
+
+/* =========================================================
+   EDIT PAGE
+   ========================================================= */
+
+.edit-page-header {
+    background: #ffffff;
+
+    border:
+        1px solid #dce5ef;
+
+    box-shadow:
+        0 4px 15px rgba(15, 39, 71, 0.05);
+}
+
+
+.edit-breadcrumb {
+    color: #f97316;
+}
+
+
+.edit-page-header h1 {
+    color: #0f2747;
+}
+
+
+.edit-page-header p {
+    color: #5d7187;
+}
+
+
+.edit-form-card {
+    background: #ffffff;
+
+    border:
+        1px solid #dce5ef;
+
+    box-shadow:
+        0 5px 18px rgba(15, 39, 71, 0.06);
+}
+
+
+.edit-form-header {
+    background: #ffffff;
+
+    border-bottom:
+        1px solid #e3eaf2;
+}
+
+
+.edit-form-icon {
+    background: #fff3e8;
+
+    color: #163a63;
+
+    border-left:
+        3px solid #f97316;
+}
+
+
+.edit-form-header h2 {
+    color: #0f2747;
+}
+
+
+.edit-form-header p {
+    color: #5d7187;
+}
+
+
+/* =========================================================
+   CATEGORY PAGE
+   ========================================================= */
+
+.categories-page .stat-card {
+    background: #ffffff;
+
+    border:
+        1px solid #dce5ef;
+
+    box-shadow:
+        0 4px 15px rgba(15, 39, 71, 0.05);
+}
+
+
+.categories-page .stat-card::before {
+    background: #f97316;
+}
+
+
+.categories-page .stat-card h3 {
+    color: #0f2747;
+}
+
+
+.categories-page .stat-number {
+    color: #0b1f35;
+}
+
+
+.categories-page .stat-card p {
+    color: #71859a;
+}
+
+
+.categories-page .card {
+    background: #ffffff;
+
+    border:
+        1px solid #dce5ef;
+}
+
+
+.categories-page .card-header {
+    border-bottom:
+        1px solid #e3eaf2;
+}
+
+
+.categories-page .card-header h2 {
+    color: #0f2747;
+}
+
+
+.categories-page .card-header p {
+    color: #5d7187;
+}
+
+
+/* CATEGORY COUNT */
+
+.categories-page .category-product-count {
+    background: #fff3e8;
+
+    color: #163a63;
+
+    border:
+        1px solid #fed7aa;
+}
+
+
+/* =========================================================
+   CUSTOMER PAGE
+   ========================================================= */
+
+.customer-stat-card {
+    background: #ffffff;
+
+    border:
+        1px solid #dce5ef;
+
+    box-shadow:
+        0 4px 15px rgba(15, 39, 71, 0.05);
+}
+
+
+.customer-stat-card::before {
+    background: #f97316;
+}
+
+
+.customer-stat-title {
+    color: #0f2747;
+}
+
+
+.customer-stat-number {
+    color: #0b1f35;
+}
+
+
+.customer-stat-description {
+    color: #71859a;
+}
+
+
+/* CUSTOMER ICON */
+
+.customer-stat-icon {
+    background: #fff3e8;
+
+    color: #163a63;
+
+    border:
+        1px solid #fed7aa;
+}
+
+
+.email-icon {
+    background: #f0fdf4;
+
+    color: #166534;
+
+    border-color: #bbf7d0;
+}
+
+
+.address-icon {
+    background: #eff6ff;
+
+    color: #163a63;
+
+    border-color: #bfdbfe;
+}
+
+
+/* CUSTOMER CARDS */
+
+.customer-card {
+    background: #ffffff;
+
+    border:
+        1px solid #dce5ef;
+
+    box-shadow:
+        0 4px 15px rgba(15, 39, 71, 0.05);
+}
+
+
+/* CUSTOMER HEADERS */
+
+.customer-search-header,
+.customer-table-header {
+    border-bottom:
+        1px solid #e3eaf2;
+}
+
+
+.customer-search-header h2,
+.customer-table-header h2 {
+    color: #0f2747;
+}
+
+
+.customer-search-header p,
+.customer-table-header p {
+    color: #5d7187;
+}
+
+
+/* CUSTOMER ID */
+
+.customer-id {
+    background: #fff3e8;
+
+    color: #163a63;
+
+    border:
+        1px solid #fed7aa;
+}
+
+
+/* =========================================================
+   STATUS BADGES
+   ========================================================= */
+
+/* Keep semantic colors */
+
+.status-good {
+    background: #dcfce7;
+
+    color: #166534;
+}
+
+
+.status-low {
+    background: #fef3c7;
+
+    color: #92400e;
+}
+
+
+.status-out {
+    background: #fee2e2;
+
+    color: #991b1b;
+}
+
+
+.status-inactive {
+    background: #fee2e2;
+
+    color: #991b1b;
+}
+
+
+.status-discontinued {
+    background: #fef3c7;
+
+    color: #92400e;
+}
+
+
+/* =========================================================
+   INVENTORY
+   ========================================================= */
+
+.low-stock-card {
+    border-left:
+        4px solid #f97316;
+}
+
+
+.out-stock-card {
+    border-left:
+        4px solid #dc2626;
+}
+
+
+/* =========================================================
+   EMPTY STATES
+   ========================================================= */
+
+.empty-state,
+.customer-empty-state {
+    background: #f7fafc;
+
+    border:
+        1px dashed #cbd8e5;
+}
+
+
+.empty-state-icon,
+.customer-empty-icon,
+.categories-page .category-empty-icon {
+    background: #fff3e8;
+
+    color: #163a63;
+
+    border:
+        1px solid #fed7aa;
+}
+
+
+.empty-state h3,
+.customer-empty-state h3,
+.categories-page .category-empty-content h3 {
+    color: #0f2747;
+}
+
+
+.empty-state p,
+.customer-empty-state p,
+.categories-page .category-empty-content p {
+    color: #5d7187;
+}
+
+
+/* =========================================================
+   OVERVIEW
+   ========================================================= */
+
+.overview-item {
+    background: #f4f7fb;
+
+    border:
+        1px solid #dce5ef;
+}
+
+
+.overview-item:hover {
+    background: #eef4f9;
+
+    border-color: #f7c9a8;
+}
+
+
+.overview-label {
+    color: #5d7187;
+}
+
+
+.overview-item strong {
+    color: #0b1f35;
+}
+
+
+/* =========================================================
+   WELCOME SECTION
+   ========================================================= */
+
+.welcome {
+    background: #ffffff;
+
+    border:
+        1px solid #dce5ef;
+}
+
+
+.welcome h2 {
+    color: #0f2747;
+}
+
+
+.welcome p {
+    color: #5d7187;
+}
+
+
+/* =========================================================
+   BARCODE
+   ========================================================= */
+
+.barcode {
+    color: #71859a;
+}
+
+
+/* =========================================================
+   DISABLED INPUT
+   ========================================================= */
+
+.form-group input:disabled,
+.form-container input:disabled,
+.edit-form-group input:disabled,
+.card .form-group input:disabled {
+    background: #eef2f6;
+
+    color: #60758a;
+
+    border-color: #d5e0ea;
+}
+
+
+/* =========================================================
+   SCROLLBAR
+   ========================================================= */
+
+.sidebar::-webkit-scrollbar-thumb,
+.table-container::-webkit-scrollbar-thumb {
+    background: #2c5279;
+}
+
+
+.sidebar::-webkit-scrollbar-thumb:hover,
+.table-container::-webkit-scrollbar-thumb:hover {
+    background: #f97316;
+}
+
+
+/* =========================================================
+   FINAL ORANGE ACCENTS
+   ========================================================= */
+
+/* Orange is used ONLY for accents */
+
+.form-container,
+.edit-form-card,
+.customer-card,
+.categories-page .card,
+.content-card {
+    border-top:
+        3px solid #f97316;
+}
+
+
+/* =========================================================
+   IMPORTANT:
+   FORCE NORMAL TEXT TO DARK BLUE
+   ========================================================= */
+
+body,
+.page-header p,
+.card p,
+.welcome p,
+.dashboard-description,
+.info-card-header h3,
+.customer-stat-description,
+.customer-search-header p,
+.customer-table-header p,
+.categories-page .card-header p,
+.edit-page-header p,
+.edit-form-header p,
+.form-group label,
+.form-container .form-group label,
+.edit-form-group label,
+.card .form-group label,
+.overview-label,
+.product-summary {
+    color: #0f2747;
+}
+
+
+/* =========================================================
+   IMPORTANT:
+   FORCE ALL IMPORTANT NUMBERS TO DARK NAVY
+   ========================================================= */
+
+.number,
+.dashboard-number,
+.info-number,
+.inventory-number,
+.summary-number,
+.customer-stat-number,
+.categories-page .stat-number,
+.overview-item strong {
+    color: #0b1f35;
+}
+
+
+/* =========================================================
+   LINKS — DARK BLUE, NOT ORANGE
+   ========================================================= */
+
+a {
+    color: #163a63;
+}
+
+
+a:hover {
+    color: #0f2747;
+}
+
+
+/* Dashboard links */
+
+.dashboard-card-link {
+    color: #163a63;
+}
+
+
+.dashboard-card-link:hover {
+    color: #0f2747;
+}
+
+
+/* =========================================================
+   FINAL RESPONSIVE SAFETY
+   ========================================================= */
+
+@media (max-width: 650px) {
+
+    .top-header {
+        background: linear-gradient(
+            135deg,
+            #0b1f35,
+            #163a63
+        );
+    }
+
+    .sidebar {
+        background: #0f2747;
+    }
+
+}
+/* =========================================================
+   CATEGORIES PAGE LAYOUT
+   ========================================================= */
+
+/* Main page container */
+.page-container {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 10px 30px 40px;
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   PAGE HEADER
+   ========================================================= */
+
+.page-container .page-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 30px;
+    margin-bottom: 25px;
+}
+
+.page-container .page-header h1 {
+    margin: 0 0 6px 0;
+    color: #0b2a4a;
+    font-size: 30px;
+    font-weight: 700;
+}
+
+.page-container .page-header p {
+    margin: 0;
+    color: #5f6f82;
+    font-size: 15px;
+}
+
+
+/* =========================================================
+   STATS
+   ========================================================= */
+
+.page-container .stats-grid {
+    width: 100%;
+    display: grid;
+    grid-template-columns: minmax(280px, 380px);
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.page-container .stat-card {
+    width: 100%;
+    min-height: 150px;
+    box-sizing: border-box;
+    background: #ffffff;
+    border: 1px solid #e3e9ef;
+    border-radius: 14px;
+    padding: 24px;
+    box-shadow: 0 4px 14px rgba(11, 42, 74, 0.06);
+}
+
+.page-container .stat-card-content {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.page-container .stat-icon {
+    width: 52px;
+    height: 52px;
+    min-width: 52px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #fff1e6;
+    color: #f28c28;
+
+    border-radius: 12px;
+    font-size: 24px;
+}
+
+.page-container .stat-card h3 {
+    margin: 0 0 5px 0;
+    color: #0b2a4a;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.page-container .stat-number {
+    color: #0b2a4a;
+    font-size: 32px;
+    line-height: 1.1;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.page-container .stat-card p {
+    margin: 0;
+    color: #718096;
+    font-size: 13px;
+}
+
+
+/* =========================================================
+   CONTENT CARDS
+   ========================================================= */
+
+.page-container .content-card {
+    width: 100%;
+    box-sizing: border-box;
+
+    background: #ffffff;
+
+    border: 1px solid #e3e9ef;
+    border-radius: 14px;
+
+    padding: 26px 28px;
+
+    margin-bottom: 25px;
+
+    box-shadow: 0 4px 14px rgba(11, 42, 74, 0.05);
+}
+
+
+/* =========================================================
+   CARD HEADERS
+   ========================================================= */
+
+.page-container .content-card-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    margin-bottom: 20px;
+}
+
+.page-container .content-card-header h2 {
+    margin: 0 0 5px 0;
+
+    color: #0b2a4a;
+
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.page-container .dashboard-description {
+    margin: 0;
+
+    color: #718096;
+
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   SEARCH FORM
+   ========================================================= */
+
+.page-container .search-form {
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+}
+
+.page-container .search-input-wrapper {
+    flex: 1;
+    position: relative;
+}
+
+.page-container .search-input-wrapper input {
+    width: 100%;
+    height: 46px;
+
+    box-sizing: border-box;
+
+    padding: 0 15px 0 42px;
+
+    border: 1px solid #d8e0e8;
+    border-radius: 9px;
+
+    background: #f9fbfd;
+
+    color: #0b2a4a;
+
+    font-size: 14px;
 
     outline: none;
 
-    border-color: #2563eb;
+    transition: all 0.2s ease;
+}
 
-    box-shadow:
-        0 0 0 3px rgba(37, 99, 235, 0.10);
+.page-container .search-input-wrapper input:focus {
+    border-color: #f28c28;
 
+    background: #ffffff;
+
+    box-shadow: 0 0 0 3px rgba(242, 140, 40, 0.12);
+}
+
+.page-container .search-input-wrapper input::placeholder {
+    color: #9aa8b6;
+}
+
+.page-container .search-icon {
+    position: absolute;
+
+    left: 15px;
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    font-size: 16px;
+
+    pointer-events: none;
 }
 
 
 /* =========================================================
-   DISABLED ID FIELD
+   BUTTONS
    ========================================================= */
 
-.card .form-group input:disabled {
+.page-container .btn {
+    height: 44px;
 
-    background: #f3f4f6;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 
-    color: #6b7280;
+    padding: 0 18px;
 
-    border-color: #d1d5db;
+    border-radius: 8px;
 
-    cursor: not-allowed;
+    text-decoration: none;
 
+    font-size: 14px;
+    font-weight: 600;
+
+    border: none;
+
+    cursor: pointer;
+
+    transition: all 0.2s ease;
+
+    white-space: nowrap;
+}
+
+.page-container .btn-primary {
+    background: #f28c28;
+    color: #ffffff;
+}
+
+.page-container .btn-primary:hover {
+    background: #df7815;
+    transform: translateY(-1px);
+}
+
+.page-container .btn-secondary {
+    background: #0b2a4a;
+    color: #ffffff;
+}
+
+.page-container .btn-secondary:hover {
+    background: #123d63;
+}
+
+.page-container .btn-danger {
+    background: #c0392b;
+    color: #ffffff;
+}
+
+.page-container .btn-danger:hover {
+    background: #a93226;
 }
 
 
 /* =========================================================
-   TEXTAREA
+   TABLE
    ========================================================= */
 
-.card .form-group textarea {
+.page-container .table-container {
+    width: 100%;
+    overflow-x: auto;
+}
 
-    min-height: 110px;
+.page-container .data-table {
+    width: 100%;
+    border-collapse: collapse;
 
-    resize: vertical;
+    min-width: 750px;
+}
 
-    line-height: 1.5;
+.page-container .data-table thead {
+    background: #0b2a4a;
+}
 
+.page-container .data-table th {
+    padding: 15px 16px;
+
+    text-align: left;
+
+    color: #ffffff;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    white-space: nowrap;
+}
+
+.page-container .data-table td {
+    padding: 15px 16px;
+
+    color: #0b2a4a;
+
+    font-size: 14px;
+
+    border-bottom: 1px solid #edf1f5;
+
+    vertical-align: middle;
+}
+
+.page-container .data-table tbody tr {
+    transition: background 0.2s ease;
+}
+
+.page-container .data-table tbody tr:hover {
+    background: #fffaf5;
 }
 
 
 /* =========================================================
-   FORM ACTIONS
+   CATEGORY VALUES
    ========================================================= */
 
-.card .form-actions {
+.page-container .category-id {
+    font-weight: 700;
+    color: #0b2a4a;
+}
 
-    display: flex;
+.page-container .category-name {
+    color: #0b2a4a;
+    font-weight: 600;
+}
+
+.page-container .category-description {
+    color: #526579;
+}
+
+.page-container .product-count {
+    display: inline-flex;
 
     align-items: center;
+    justify-content: center;
 
-    justify-content: flex-end;
+    min-width: 34px;
+    height: 30px;
 
-    gap: 10px;
+    padding: 0 9px;
 
-    margin-top: 28px;
+    border-radius: 15px;
 
-    padding-top: 20px;
+    background: #fff1e6;
+    color: #0b2a4a;
 
-    border-top:
-        1px solid #eef2f7;
-
+    font-weight: 700;
 }
 
 
 /* =========================================================
-   BUTTON SIZES
+   ACTION BUTTONS
    ========================================================= */
 
-.card .form-actions .btn {
+.page-container .action-buttons {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
 
-    min-height: 40px;
+.page-container .btn-small {
+    height: 34px;
 
-    padding:
-        10px 18px;
+    padding: 0 12px;
 
+    font-size: 12px;
+
+    border-radius: 6px;
 }
 
 
 /* =========================================================
-   EDIT PAGE HEADER
+   MUTED TEXT
    ========================================================= */
 
-.main-content .page-header {
+.page-container .text-muted {
+    color: #9aa8b6;
+    font-style: italic;
+}
 
+
+/* =========================================================
+   EMPTY STATE
+   ========================================================= */
+
+.page-container .empty-state {
     width: 100%;
 
+    min-height: 280px;
+
+    display: flex;
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+
+    text-align: center;
+
+    padding: 40px 20px;
+
+    box-sizing: border-box;
+}
+
+.page-container .empty-state-icon {
+    width: 64px;
+    height: 64px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin-bottom: 18px;
+
+    border-radius: 16px;
+
+    background: #fff1e6;
+
+    color: #f28c28;
+
+    font-size: 28px;
+}
+
+.page-container .empty-state h3 {
+    margin: 0 0 8px 0;
+
+    color: #0b2a4a;
+
+    font-size: 20px;
+}
+
+.page-container .empty-state p {
+    margin: 0 0 20px 0;
+
+    max-width: 500px;
+
+    color: #718096;
+
+    font-size: 14px;
+
+    line-height: 1.6;
 }
 
 
@@ -4339,55 +5853,316 @@ body {
    RESPONSIVE
    ========================================================= */
 
-@media (max-width: 750px) {
+@media (max-width: 900px) {
 
-    .form-grid {
+    .page-container {
+        padding: 10px 20px 30px;
+    }
 
+    .page-container .page-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .page-container .stats-grid {
         grid-template-columns: 1fr;
-
-        gap: 18px;
-
     }
 
-
-    .form-group-full {
-
-        grid-column: auto;
-
+    .page-container .search-form {
+        flex-wrap: wrap;
     }
 
-
-    .card-header {
-
-        padding: 18px 20px;
-
-    }
-
-
-    .card form {
-
-        padding: 20px;
-
+    .page-container .search-input-wrapper {
+        width: 100%;
+        flex-basis: 100%;
     }
 
 }
 
 
-@media (max-width: 500px) {
+@media (max-width: 600px) {
 
-    .card .form-actions {
+    .page-container {
+        padding: 10px 14px 25px;
+    }
 
-        flex-direction: column-reverse;
+    .page-container .content-card {
+        padding: 20px 16px;
+    }
+
+    .page-container .page-header h1 {
+        font-size: 25px;
+    }
+
+    .page-container .search-form {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .page-container .search-input-wrapper {
+        width: 100%;
+    }
+
+    .page-container .btn {
+        width: 100%;
+    }
+
+    .page-container .action-buttons {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+}
+/* =========================================================
+   FINAL FIX — CUSTOMER STATISTICS HORIZONTAL LAYOUT
+   ========================================================= */
+
+.customers-page .stats-grid,
+.stats-grid {
+
+    display: grid !important;
+
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr)) !important;
+
+    grid-template-rows: 1fr !important;
+
+    gap: 24px !important;
+
+    width: 100% !important;
+
+    max-width: 100% !important;
+
+    margin: 25px 0 30px 0 !important;
+
+    padding: 0 !important;
+
+    box-sizing: border-box !important;
+
+    align-items: stretch !important;
+}
+
+
+/* EACH CARD */
+
+.customers-page .stats-grid .stat-card,
+.stats-grid .stat-card {
+
+    display: block !important;
+
+    width: 100% !important;
+
+    max-width: none !important;
+
+    min-width: 0 !important;
+
+    margin: 0 !important;
+
+    box-sizing: border-box !important;
+
+    background: #ffffff !important;
+
+    padding: 24px !important;
+
+    border-radius: 14px !important;
+
+    border: 1px solid #e5e7eb !important;
+
+    box-shadow:
+        0 4px 14px rgba(15, 23, 42, 0.06) !important;
+}
+
+
+/* CARD CONTENT */
+
+.customers-page .stats-grid .stat-card-content,
+.stats-grid .stat-card-content {
+
+    width: 100% !important;
+
+    display: block !important;
+
+    box-sizing: border-box !important;
+}
+
+
+/* TITLE */
+
+.customers-page .stats-grid .stat-card h3,
+.stats-grid .stat-card h3 {
+
+    color: #0b2a4a !important;
+
+    margin: 0 0 10px 0 !important;
+
+    font-size: 15px !important;
+
+    font-weight: 700 !important;
+}
+
+
+/* NUMBER */
+
+.customers-page .stats-grid .stat-number,
+.stats-grid .stat-number {
+
+    color: #0b2a4a !important;
+
+    font-size: 32px !important;
+
+    font-weight: 800 !important;
+
+    margin: 0 0 8px 0 !important;
+}
+
+
+/* DESCRIPTION */
+
+.customers-page .stats-grid .stat-card p,
+.stats-grid .stat-card p {
+
+    color: #64748b !important;
+
+    margin: 0 !important;
+
+    font-size: 13px !important;
+}
+
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 900px) {
+
+    .customers-page .stats-grid,
+    .stats-grid {
+
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr)) !important;
+    }
+
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+    .customers-page .stats-grid,
+    .stats-grid {
+
+        grid-template-columns:
+            1fr !important;
+    }
+
+}
+/* =========================================================
+   REPORT PERIOD
+   ========================================================= */
+
+.report-period-card {
+    margin-bottom: 22px;
+}
+
+
+.report-period-form {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    width: 100%;
+}
+
+
+.report-period-select {
+
+    flex: 1;
+
+    min-height: 44px;
+
+    padding: 10px 14px;
+
+    border: 1px solid #d1d5db;
+
+    border-radius: 8px;
+
+    background: #ffffff;
+
+    color: #0b2a4a;
+
+    font-family: inherit;
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+
+.report-period-select:focus {
+
+    outline: none;
+
+    border-color: #f97316;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(249, 115, 22, 0.12);
+}
+
+
+.report-period-display {
+
+    margin-bottom: 22px;
+
+    padding: 14px 18px;
+
+    background: #f8fafc;
+
+    border-left: 4px solid #f97316;
+
+    border-radius: 8px;
+
+    color: #0b2a4a;
+
+    font-size: 14px;
+
+    font-weight: 500;
+}
+
+
+.report-period-display strong {
+
+    color: #0b2a4a;
+
+    font-weight: 800;
+}
+
+
+/* =========================================================
+   REPORT RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+    .report-period-form {
+
+        flex-direction: column;
 
         align-items: stretch;
-
     }
 
 
-    .card .form-actions .btn {
+    .report-period-form .btn {
 
         width: 100%;
-
     }
 
 }

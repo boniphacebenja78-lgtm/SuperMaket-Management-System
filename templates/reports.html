@@ -1,0 +1,695 @@
+{% extends "base.html" %}
+
+{% block title %}
+Reports — Supermarket Management System
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+
+    <div>
+        <h1>Reports</h1>
+
+        <p>
+            Overview of supermarket sales, purchases,
+            inventory, customers, and suppliers.
+        </p>
+    </div>
+
+</div>
+<!-- =====================================================
+     REPORT PERIOD
+===================================================== -->
+
+<div class="content-card report-period-card">
+
+    <div class="content-card-header">
+
+        <div>
+
+            <h2>Report Period</h2>
+
+            <p class="dashboard-description">
+                Select the period you want to analyze.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <form
+        method="GET"
+        action="{{ url_for('reports') }}"
+        class="report-period-form"
+    >
+
+        <select
+            name="period"
+            class="report-period-select"
+        >
+
+            <option
+                value="today"
+                {% if period == "today" %}selected{% endif %}
+            >
+                Today
+            </option>
+
+            <option
+                value="week"
+                {% if period == "week" %}selected{% endif %}
+            >
+                This Week
+            </option>
+
+            <option
+                value="month"
+                {% if period == "month" %}selected{% endif %}
+            >
+                This Month
+            </option>
+
+            <option
+                value="all"
+                {% if period == "all" %}selected{% endif %}
+            >
+                All Time
+            </option>
+
+        </select>
+
+
+        <button
+            type="submit"
+            class="btn btn-primary"
+        >
+            Generate Report
+        </button>
+
+    </form>
+
+</div>
+
+
+<!-- =====================================================
+     SELECTED PERIOD
+===================================================== -->
+
+<div class="report-period-display">
+
+    Showing report for:
+
+    <strong>
+        {{ period_label }}
+    </strong>
+
+</div>
+
+<!-- =====================================================
+     SALES
+===================================================== -->
+
+<div class="content-card">
+
+    <div class="content-card-header">
+
+        <div>
+
+            <h2>Sales Overview</h2>
+
+            <p class="dashboard-description">
+                Summary of supermarket sales performance.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <div class="stats-grid">
+
+        <div class="stat-card">
+
+            <div class="stat-card-content">
+
+                <h3>Total Sales</h3>
+
+                <div class="stat-number">
+
+                    GH₵
+                    {{ "%.2f"|format(
+                        sales_report.total_sales or 0
+                    ) }}
+
+                </div>
+
+                <p>
+                    Total sales revenue
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <div class="stat-card-content">
+
+                <h3>Transactions</h3>
+
+                <div class="stat-number">
+
+                    {{ sales_report.total_transactions or 0 }}
+
+                </div>
+
+                <p>
+                    Total sales transactions
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <div class="stat-card-content">
+
+                <h3>Average Sale</h3>
+
+                <div class="stat-number">
+
+                    GH₵
+                    {{ "%.2f"|format(
+                        sales_report.average_sale or 0
+                    ) }}
+
+                </div>
+
+                <p>
+                    Average transaction value
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     PURCHASES
+===================================================== -->
+
+<div class="content-card">
+
+    <div class="content-card-header">
+
+        <div>
+
+            <h2>Purchase Overview</h2>
+
+            <p class="dashboard-description">
+                Summary of purchases made from suppliers.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <div class="stats-grid">
+
+        <div class="stat-card">
+
+            <div class="stat-card-content">
+
+                <h3>Total Purchases</h3>
+
+                <div class="stat-number">
+
+                    {{ purchase_report.total_purchases or 0 }}
+
+                </div>
+
+                <p>
+                    Purchase transactions
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <div class="stat-card-content">
+
+                <h3>Total Purchase Cost</h3>
+
+                <div class="stat-number">
+
+                    GH₵
+                    {{ "%.2f"|format(
+                        purchase_report.total_purchase_cost or 0
+                    ) }}
+
+                </div>
+
+                <p>
+                    Total supplier expenditure
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     BUSINESS OVERVIEW
+===================================================== -->
+
+<div class="content-card">
+
+    <div class="content-card-header">
+
+        <div>
+
+            <h2>Business Overview</h2>
+
+            <p class="dashboard-description">
+                Summary of important supermarket records.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <div class="stats-grid">
+
+        <div class="stat-card">
+
+            <div class="stat-card-content">
+
+                <h3>Products</h3>
+
+                <div class="stat-number">
+                    {{ inventory_report.total_products or 0 }}
+                </div>
+
+                <p>
+                    Products in inventory
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <div class="stat-card-content">
+
+                <h3>Low Stock</h3>
+
+                <div class="stat-number">
+                    {{ inventory_report.low_stock_products or 0 }}
+                </div>
+
+                <p>
+                    Products requiring attention
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <div class="stat-card-content">
+
+                <h3>Customers</h3>
+
+                <div class="stat-number">
+                    {{ customer_report.total_customers or 0 }}
+                </div>
+
+                <p>
+                    Registered customers
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <div class="stat-card-content">
+
+                <h3>Suppliers</h3>
+
+                <div class="stat-number">
+                    {{ supplier_report.total_suppliers or 0 }}
+                </div>
+
+                <p>
+                    Registered suppliers
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <div class="stat-card-content">
+
+                <h3>Categories</h3>
+
+                <div class="stat-number">
+                    {{ category_report.total_categories or 0 }}
+                </div>
+
+                <p>
+                    Product categories
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <div class="stat-card-content">
+
+                <h3>Out of Stock</h3>
+
+                <div class="stat-number">
+                    {{ inventory_report.out_of_stock_products or 0 }}
+                </div>
+
+                <p>
+                    Products currently unavailable
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     PAYMENT METHODS
+===================================================== -->
+
+<div class="content-card">
+
+    <div class="content-card-header">
+
+        <div>
+
+            <h2>Sales by Payment Method</h2>
+
+            <p class="dashboard-description">
+                Sales revenue grouped by payment method.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    {% if payment_methods %}
+
+    <div class="table-container">
+
+        <table class="data-table">
+
+            <thead>
+
+                <tr>
+
+                    <th>Payment Method</th>
+
+                    <th>Transactions</th>
+
+                    <th>Total Amount</th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% for payment in payment_methods %}
+
+                <tr>
+
+                    <td>
+                        {{ payment.paymentMethod }}
+                    </td>
+
+                    <td>
+                        {{ payment.transaction_count }}
+                    </td>
+
+                    <td>
+                        GH₵
+                        {{ "%.2f"|format(
+                            payment.total_amount or 0
+                        ) }}
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    {% else %}
+
+    <p class="dashboard-description">
+        No payment data available.
+    </p>
+
+    {% endif %}
+
+</div>
+
+
+<!-- =====================================================
+     RECENT SALES
+===================================================== -->
+
+<div class="content-card">
+
+    <div class="content-card-header">
+
+        <div>
+
+            <h2>Recent Sales</h2>
+
+            <p class="dashboard-description">
+                The latest sales transactions.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    {% if recent_sales %}
+
+    <div class="table-container">
+
+        <table class="data-table">
+
+            <thead>
+
+                <tr>
+
+                    <th>Sale ID</th>
+
+                    <th>Date</th>
+
+                    <th>Customer</th>
+
+                    <th>Payment</th>
+
+                    <th>Total</th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% for sale in recent_sales %}
+
+                <tr>
+
+                    <td>
+                        <strong>
+                            {{ sale.saleID }}
+                        </strong>
+                    </td>
+
+                    <td>
+                        {{ sale.saleDate }}
+                    </td>
+
+                    <td>
+
+                        {% if sale.customerName %}
+
+                            {{ sale.customerName }}
+
+                        {% else %}
+
+                            Walk-in Customer
+
+                        {% endif %}
+
+                    </td>
+
+                    <td>
+                        {{ sale.paymentMethod }}
+                    </td>
+
+                    <td>
+
+                        GH₵
+                        {{ "%.2f"|format(
+                            sale.totalAmount or 0
+                        ) }}
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    {% else %}
+
+    <p class="dashboard-description">
+        No sales transactions available.
+    </p>
+
+    {% endif %}
+
+</div>
+
+
+<!-- =====================================================
+     LOW STOCK
+===================================================== -->
+
+<div class="content-card">
+
+    <div class="content-card-header">
+
+        <div>
+
+            <h2>Low Stock Products</h2>
+
+            <p class="dashboard-description">
+                Products with five or fewer units available.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    {% if low_stock_products %}
+
+    <div class="table-container">
+
+        <table class="data-table">
+
+            <thead>
+
+                <tr>
+
+                    <th>Product ID</th>
+
+                    <th>Product Name</th>
+
+                    <th>Quantity</th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% for product in low_stock_products %}
+
+                <tr>
+
+                    <td>
+                        <strong>
+                            {{ product.productID }}
+                        </strong>
+                    </td>
+
+                    <td>
+                        {{ product.productName }}
+                    </td>
+
+                    <td>
+                        {{ product.quantity }}
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    {% else %}
+
+    <p class="dashboard-description">
+        No low-stock products.
+    </p>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

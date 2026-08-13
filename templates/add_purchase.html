@@ -1,0 +1,454 @@
+{% extends "base.html" %}
+
+{% block title %}
+Create Purchase — Supermarket Management System
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+
+    <div>
+        <h1>Create Purchase</h1>
+        <p>Record a new purchase from a supplier</p>
+    </div>
+
+    <a href="{{ url_for('purchases') }}" class="btn btn-secondary">
+        ← Back to Purchases
+    </a>
+
+</div>
+
+
+{% if error %}
+
+<div class="error">
+    <strong>Error:</strong>
+    {{ error }}
+</div>
+
+{% endif %}
+
+
+<div class="form-container">
+
+    <form method="POST"
+          action="{{ url_for('save_purchase') }}">
+
+        <!-- ============================================= -->
+        <!-- PURCHASE INFORMATION -->
+        <!-- ============================================= -->
+
+        <div class="form-section">
+
+            <h2>Purchase Information</h2>
+
+            <div class="form-grid">
+
+                <!-- PURCHASE ID -->
+
+                <div class="form-group">
+
+                    <label for="purchaseID">
+                        Purchase ID
+                    </label>
+
+                    <input
+                        type="text"
+                        id="purchaseID"
+                        name="purchaseID"
+                        placeholder="e.g. PUR026"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- PURCHASE DATE -->
+
+                <div class="form-group">
+
+                    <label for="purchaseDate">
+                        Purchase Date
+                    </label>
+
+                    <input
+                        type="date"
+                        id="purchaseDate"
+                        name="purchaseDate"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- SUPPLIER -->
+
+                <div class="form-group">
+
+                    <label for="supplierID">
+                        Supplier
+                    </label>
+
+                    <select
+                        id="supplierID"
+                        name="supplierID"
+                        required
+                    >
+
+                        <option value="">
+                            Select Supplier
+                        </option>
+
+                        {% for supplier in suppliers %}
+
+                        <option value="{{ supplier.supplierID }}">
+
+                            {{ supplier.supplierName }}
+                            ({{ supplier.supplierID }})
+
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <!-- EMPLOYEE -->
+
+                <div class="form-group">
+
+                    <label for="employeeID">
+                        Employee
+                    </label>
+
+                    <select
+                        id="employeeID"
+                        name="employeeID"
+                        required
+                    >
+
+                        <option value="">
+                            Select Employee
+                        </option>
+
+                        {% for employee in employees %}
+
+                        <option value="{{ employee.employeeID }}">
+
+                            {{ employee.fName }}
+                            {{ employee.lName }}
+
+                            ({{ employee.employeeID }})
+
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <!-- PRODUCT -->
+
+                <div class="form-group">
+
+                    <label for="productID">
+                        Product
+                    </label>
+
+                    <select
+                        id="productID"
+                        name="productID"
+                        required
+                    >
+
+                        <option value="">
+                            Select Product
+                        </option>
+
+                        {% for product in products %}
+
+                        <option
+                            value="{{ product.productID }}"
+                            data-cost="{{ product.costPrice }}"
+                        >
+
+                            {{ product.productName }}
+
+                            ({{ product.productID }})
+
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <!-- QUANTITY -->
+
+                <div class="form-group">
+
+                    <label for="quantity">
+                        Quantity
+                    </label>
+
+                    <input
+                        type="number"
+                        id="quantity"
+                        name="quantity"
+                        min="1"
+                        placeholder="Enter quantity"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- UNIT COST -->
+
+                <div class="form-group">
+
+                    <label for="unitCost">
+                        Unit Cost (GHS)
+                    </label>
+
+                    <input
+                        type="number"
+                        id="unitCost"
+                        name="unitCost"
+                        min="0"
+                        step="0.01"
+                        placeholder="Enter unit cost"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- STATUS -->
+
+                <div class="form-group">
+
+                    <label for="status">
+                        Status
+                    </label>
+
+                    <select
+                        id="status"
+                        name="status"
+                        required
+                    >
+
+                        <option value="Completed">
+                            Completed
+                        </option>
+
+                        <option value="Pending">
+                            Pending
+                        </option>
+
+                        <option value="Cancelled">
+                            Cancelled
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ============================================= -->
+        <!-- PURCHASE SUMMARY -->
+        <!-- ============================================= -->
+
+        <div class="form-section">
+
+            <h2>Purchase Summary</h2>
+
+            <div class="purchase-summary">
+
+                <div class="summary-row">
+
+                    <span>
+                        Quantity
+                    </span>
+
+                    <strong id="summaryQuantity">
+                        0
+                    </strong>
+
+                </div>
+
+
+                <div class="summary-row">
+
+                    <span>
+                        Unit Cost
+                    </span>
+
+                    <strong>
+                        GHS
+                        <span id="summaryUnitCost">
+                            0.00
+                        </span>
+                    </strong>
+
+                </div>
+
+
+                <div class="summary-row total-row">
+
+                    <span>
+                        Total Cost
+                    </span>
+
+                    <strong>
+                        GHS
+                        <span id="summaryTotal">
+                            0.00
+                        </span>
+                    </strong>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ============================================= -->
+        <!-- BUTTONS -->
+        <!-- ============================================= -->
+
+        <div class="form-actions">
+
+            <a
+                href="{{ url_for('purchases') }}"
+                class="btn btn-secondary"
+            >
+                Cancel
+            </a>
+
+            <button
+                type="submit"
+                class="btn btn-primary"
+            >
+                Save Purchase
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+
+
+<!-- ============================================= -->
+<!-- JAVASCRIPT -->
+<!-- ============================================= -->
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const quantity =
+        document.getElementById("quantity");
+
+    const unitCost =
+        document.getElementById("unitCost");
+
+    const product =
+        document.getElementById("productID");
+
+    const summaryQuantity =
+        document.getElementById("summaryQuantity");
+
+    const summaryUnitCost =
+        document.getElementById("summaryUnitCost");
+
+    const summaryTotal =
+        document.getElementById("summaryTotal");
+
+
+    function calculateTotal() {
+
+        const qty =
+            parseFloat(quantity.value) || 0;
+
+        const cost =
+            parseFloat(unitCost.value) || 0;
+
+        const total =
+            qty * cost;
+
+
+        summaryQuantity.textContent =
+            qty;
+
+        summaryUnitCost.textContent =
+            cost.toFixed(2);
+
+        summaryTotal.textContent =
+            total.toFixed(2);
+
+    }
+
+
+    quantity.addEventListener(
+        "input",
+        calculateTotal
+    );
+
+    unitCost.addEventListener(
+        "input",
+        calculateTotal
+    );
+
+
+    product.addEventListener(
+        "change",
+        function () {
+
+            const selected =
+                product.options[
+                    product.selectedIndex
+                ];
+
+            const cost =
+                selected.getAttribute(
+                    "data-cost"
+                );
+
+
+            if (
+                cost &&
+                !unitCost.value
+            ) {
+
+                unitCost.value =
+                    parseFloat(cost).toFixed(2);
+
+                calculateTotal();
+
+            }
+
+        }
+    );
+
+
+    calculateTotal();
+
+});
+
+</script>
+
+{% endblock %}

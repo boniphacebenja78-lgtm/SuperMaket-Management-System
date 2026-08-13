@@ -1410,6 +1410,10 @@ def delete_employee(employee_id):
 
         cursor = connection.cursor()
 
+        # ==========================================
+        # CHECK INVENTORY MOVEMENTS
+        # ==========================================
+
         cursor.execute("""
             SELECT COUNT(*)
             FROM inventorymovement
@@ -1419,6 +1423,11 @@ def delete_employee(employee_id):
         ))
 
         movement_count = cursor.fetchone()[0]
+
+
+        # ==========================================
+        # CHECK SALES
+        # ==========================================
 
         cursor.execute("""
             SELECT COUNT(*)
@@ -1430,7 +1439,38 @@ def delete_employee(employee_id):
 
         sale_count = cursor.fetchone()[0]
 
-        if movement_count > 0 or sale_count > 0:
+
+        # ==========================================
+        # CHECK PURCHASES
+        # ==========================================
+
+        cursor.execute("""
+            SELECT COUNT(*)
+            FROM purchase
+            WHERE employeeID = ?
+        """, (
+            employee_id,
+        ))
+
+        purchase_count = cursor.fetchone()[0]
+
+
+        # ==========================================
+        # IF EMPLOYEE HAS RELATED RECORDS
+        # ==========================================
+        #
+        # We do NOT physically delete the employee.
+        #
+        # Instead, we deactivate the employee so that
+        # historical sales, purchases and inventory
+        # records remain valid.
+        # ==========================================
+
+        if (
+            movement_count > 0
+            or sale_count > 0
+            or purchase_count > 0
+        ):
 
             cursor.execute("""
                 UPDATE employee
@@ -1449,12 +1489,51 @@ def delete_employee(employee_id):
                 url_for("employees")
             )
 
+
+        # ==========================================
+        # NO RELATED RECORDS
+        # ==========================================
+        #
+        # Safe to permanently delete employee.
+        # ==========================================
+
         cursor.execute("""
             DELETE FROM employee
             WHERE employeeID = ?
         """, (
             employee_id,
         ))
+
+
+        # ==========================================
+        # CHECK WHETHER DELETE ACTUALLY HAPPENED
+        # ==========================================
+
+        if cursor.rowcount == 0:
+
+            connection.rollback()
+
+            cursor.close()
+            connection.close()
+
+            return """
+            <h1>Employee Not Found</h1>
+
+            <p>
+                The employee could not be found.
+            </p>
+
+            <br>
+
+            <a href="/employees">
+                Back to Employees
+            </a>
+            """
+
+
+        # ==========================================
+        # SAVE CHANGES
+        # ==========================================
 
         connection.commit()
 
@@ -1465,16 +1544,24 @@ def delete_employee(employee_id):
             url_for("employees")
         )
 
+
+    # ==========================================
+    # ERROR HANDLING
+    # ==========================================
+
     except Exception as e:
 
         if connection:
+
             connection.rollback()
             connection.close()
 
         return f"""
         <h1>Could Not Delete Employee</h1>
 
-        <p>{e}</p>
+        <p>
+            {e}
+        </p>
 
         <br>
 
@@ -3828,26 +3915,34 @@ def delete_loyalty_card(card_id):
         conn.close()
         
 # =========================================================
-# SALES
+# SALES MANAGEMENT
 # =========================================================
 
+
 # =========================================================
-# VIEW SALES
+# VIEW ALL SALES
 # =========================================================
 
-@app.route("/sales")
+@app.route("/sales", methods=["GET"])
 def sales():
 
     search = request.args.get("search", "").strip()
 
     conn = get_db_connection()
+
+    if conn is None:
+        return "Database connection failed.", 500
+
     cursor = conn.cursor(dictionary=True)
 
     try:
 
         if search:
 
-            query = """
+            search_value = f"%{search}%"
+
+            cursor.execute(
+                """
                 SELECT
                     s.saleID,
                     s.saleDate,
@@ -3858,9 +3953,11 @@ def sales():
                     s.taxAmount,
                     s.pointsRedeemed,
 
-                    CONCAT(c.fName, ' ', c.lName) AS customerName,
+                    CONCAT(c.fName, ' ', c.lName)
+                        AS customerName,
 
-                    CONCAT(e.fName, ' ', e.lName) AS employeeName
+                    CONCAT(e.fName, ' ', e.lName)
+                        AS employeeName
 
                 FROM Sale s
 
@@ -3879,12 +3976,7 @@ def sales():
                     OR CONCAT(e.fName, ' ', e.lName) LIKE %s
 
                 ORDER BY s.saleDate DESC
-            """
-
-            search_value = f"%{search}%"
-
-            cursor.execute(
-                query,
+                """,
                 (
                     search_value,
                     search_value,
@@ -3897,7 +3989,8 @@ def sales():
 
         else:
 
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT
                     s.saleID,
                     s.saleDate,
@@ -3908,9 +4001,11 @@ def sales():
                     s.taxAmount,
                     s.pointsRedeemed,
 
-                    CONCAT(c.fName, ' ', c.lName) AS customerName,
+                    CONCAT(c.fName, ' ', c.lName)
+                        AS customerName,
 
-                    CONCAT(e.fName, ' ', e.lName) AS employeeName
+                    CONCAT(e.fName, ' ', e.lName)
+                        AS employeeName
 
                 FROM Sale s
 
@@ -3921,7 +4016,8 @@ def sales():
                     ON s.employeeID = e.employeeID
 
                 ORDER BY s.saleDate DESC
-            """)
+                """
+            )
 
         sales_list = cursor.fetchall()
 
@@ -3933,7 +4029,7 @@ def sales():
 
     except Exception as e:
 
-        print("Error loading sales:", e)
+        print("ERROR LOADING SALES:", repr(e))
 
         return render_template(
             "sales.html",
@@ -3952,55 +4048,67 @@ def sales():
 # ADD SALE PAGE
 # =========================================================
 
-@app.route("/sales/add")
+@app.route("/sales/add", methods=["GET"])
 def add_sale():
 
     conn = get_db_connection()
+
+    if conn is None:
+        return "Database connection failed.", 500
+
     cursor = conn.cursor(dictionary=True)
 
     try:
 
         # -------------------------------------------------
-        # GET EMPLOYEES
+        # EMPLOYEES
         # -------------------------------------------------
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 employeeID,
                 fName,
                 lName
             FROM Employee
+            WHERE status = 'Active'
             ORDER BY fName, lName
-        """)
+            """
+        )
 
         employees = cursor.fetchall()
 
 
         # -------------------------------------------------
-        # GET CUSTOMERS
+        # CUSTOMERS
         # -------------------------------------------------
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 customerID,
                 fName,
                 lName
             FROM Customer
             ORDER BY fName, lName
-        """)
+            """
+        )
 
         customers = cursor.fetchall()
 
 
         # -------------------------------------------------
-        # GET PRODUCTS
+        # PRODUCTS WITH AVAILABLE STOCK
         # -------------------------------------------------
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 p.productID,
                 p.productName,
-                p.unitPrice
+                p.unitPrice,
+                i.quantity AS stockQuantity
+
             FROM Product p
 
             INNER JOIN Inventory i
@@ -4009,7 +4117,8 @@ def add_sale():
             WHERE i.quantity > 0
 
             ORDER BY p.productName
-        """)
+            """
+        )
 
         products = cursor.fetchall()
 
@@ -4018,12 +4127,13 @@ def add_sale():
             "add_sale.html",
             employees=employees,
             customers=customers,
-            products=products
+            products=products,
+            error=None
         )
 
     except Exception as e:
 
-        print("Error loading add sale page:", e)
+        print("ERROR LOADING ADD SALE PAGE:", repr(e))
 
         return render_template(
             "add_sale.html",
@@ -4039,88 +4149,56 @@ def add_sale():
         conn.close()
 
 
-def get_employees_for_sale():
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+# =========================================================
+# CREATE / SAVE SALE
+# =========================================================
 
-    try:
-        cursor.execute("""
-            SELECT
-                employeeID,
-                fName,
-                lName
-            FROM Employee
-            ORDER BY fName, lName
-        """)
-        return cursor.fetchall()
-    finally:
-        cursor.close()
-        conn.close()
-
-
-def get_customers_for_sale():
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-
-    try:
-        cursor.execute("""
-            SELECT
-                customerID,
-                fName,
-                lName
-            FROM Customer
-            ORDER BY fName, lName
-        """)
-        return cursor.fetchall()
-    finally:
-        cursor.close()
-        conn.close()
-
-
-def get_products_for_sale():
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-
-    try:
-        cursor.execute("""
-            SELECT
-                p.productID,
-                p.productName,
-                p.unitPrice
-            FROM Product p
-
-            INNER JOIN Inventory i
-                ON p.productID = i.productID
-
-            WHERE i.quantity > 0
-
-            ORDER BY p.productName
-        """)
-        return cursor.fetchall()
-    finally:
-        cursor.close()
-        conn.close()
-
-
-@app.route(
-    "/sales/save",
-    methods=["POST"]
-)
+@app.route("/sales/save", methods=["POST"])
 def save_sale():
 
     # -----------------------------------------------------
     # GET FORM DATA
     # -----------------------------------------------------
 
-    sale_id = request.form.get("saleID", "").strip()
-    employee_id = request.form.get("employeeID", "").strip()
-    customer_id = request.form.get("customerID", "").strip()
-    payment_method = request.form.get("paymentMethod", "").strip()
-    product_id = request.form.get("productID", "").strip()
+    sale_id = request.form.get(
+        "saleID",
+        ""
+    ).strip()
 
-    quantity_text = request.form.get("quantity", "").strip()
-    discount_text = request.form.get("discount", "0").strip()
-    points_text = request.form.get("pointsRedeemed", "0").strip()
+    employee_id = request.form.get(
+        "employeeID",
+        ""
+    ).strip()
+
+    customer_id = request.form.get(
+        "customerID",
+        ""
+    ).strip()
+
+    payment_method = request.form.get(
+        "paymentMethod",
+        ""
+    ).strip()
+
+    product_id = request.form.get(
+        "productID",
+        ""
+    ).strip()
+
+    quantity_text = request.form.get(
+        "quantity",
+        ""
+    ).strip()
+
+    discount_text = request.form.get(
+        "discount",
+        "0"
+    ).strip()
+
+    points_text = request.form.get(
+        "pointsRedeemed",
+        "0"
+    ).strip()
 
 
     # -----------------------------------------------------
@@ -4128,6 +4206,7 @@ def save_sale():
     # -----------------------------------------------------
 
     if not sale_id:
+
         return render_template(
             "add_sale.html",
             employees=get_employees_for_sale(),
@@ -4136,7 +4215,9 @@ def save_sale():
             error="Sale ID is required."
         )
 
+
     if not employee_id:
+
         return render_template(
             "add_sale.html",
             employees=get_employees_for_sale(),
@@ -4145,7 +4226,9 @@ def save_sale():
             error="Please select an employee."
         )
 
+
     if not payment_method:
+
         return render_template(
             "add_sale.html",
             employees=get_employees_for_sale(),
@@ -4154,7 +4237,9 @@ def save_sale():
             error="Please select a payment method."
         )
 
+
     if not product_id:
+
         return render_template(
             "add_sale.html",
             employees=get_employees_for_sale(),
@@ -4165,7 +4250,7 @@ def save_sale():
 
 
     # -----------------------------------------------------
-    # CONVERT NUMERIC VALUES
+    # CONVERT QUANTITY
     # -----------------------------------------------------
 
     try:
@@ -4186,9 +4271,15 @@ def save_sale():
         )
 
 
+    # -----------------------------------------------------
+    # CONVERT DISCOUNT
+    # -----------------------------------------------------
+
     try:
 
-        discount = float(discount_text or 0)
+        discount = float(
+            discount_text or 0
+        )
 
         if discount < 0 or discount > 100:
             raise ValueError
@@ -4204,9 +4295,15 @@ def save_sale():
         )
 
 
+    # -----------------------------------------------------
+    # CONVERT POINTS
+    # -----------------------------------------------------
+
     try:
 
-        points_redeemed = int(points_text or 0)
+        points_redeemed = int(
+            points_text or 0
+        )
 
         if points_redeemed < 0:
             raise ValueError
@@ -4222,7 +4319,10 @@ def save_sale():
         )
 
 
-    # Empty customer means walk-in customer
+    # -----------------------------------------------------
+    # WALK-IN CUSTOMER
+    # -----------------------------------------------------
+
     if customer_id == "":
         customer_id = None
 
@@ -4232,12 +4332,25 @@ def save_sale():
     # -----------------------------------------------------
 
     conn = get_db_connection()
+
+    if conn is None:
+
+        return render_template(
+            "add_sale.html",
+            employees=get_employees_for_sale(),
+            customers=get_customers_for_sale(),
+            products=get_products_for_sale(),
+            error="Could not connect to MariaDB."
+        )
+
+
     cursor = conn.cursor(dictionary=True)
+
 
     try:
 
         # -------------------------------------------------
-        # 1. CHECK SALE ID
+        # 1. CHECK DUPLICATE SALE ID
         # -------------------------------------------------
 
         cursor.execute(
@@ -4249,7 +4362,9 @@ def save_sale():
             (sale_id,)
         )
 
-        if cursor.fetchone():
+        existing_sale = cursor.fetchone()
+
+        if existing_sale:
 
             return render_template(
                 "add_sale.html",
@@ -4290,7 +4405,7 @@ def save_sale():
         # 3. CHECK CUSTOMER
         # -------------------------------------------------
 
-        if customer_id:
+        if customer_id is not None:
 
             cursor.execute(
                 """
@@ -4315,7 +4430,7 @@ def save_sale():
 
 
         # -------------------------------------------------
-        # 4. GET PRODUCT AND INVENTORY
+        # 4. GET PRODUCT + INVENTORY
         # -------------------------------------------------
 
         cursor.execute(
@@ -4346,7 +4461,10 @@ def save_sale():
                 employees=get_employees_for_sale(),
                 customers=get_customers_for_sale(),
                 products=get_products_for_sale(),
-                error=f"Product '{product_id}' was not found or has no inventory record."
+                error=(
+                    f"Product '{product_id}' "
+                    f"was not found or has no inventory record."
+                )
             )
 
 
@@ -4388,7 +4506,9 @@ def save_sale():
         # 7. CALCULATE SALE
         # -------------------------------------------------
 
-        gross_amount = unit_price * quantity
+        gross_amount = (
+            unit_price * quantity
+        )
 
         discount_amount = (
             gross_amount * discount / 100
@@ -4398,11 +4518,14 @@ def save_sale():
             gross_amount - discount_amount
         )
 
+        # 3% tax
+        tax_amount = (
+            subtotal * 0.03
+        )
 
-        # Your existing database sales use 3% tax
-        tax_amount = subtotal * 0.03
-
-        total_amount = subtotal + tax_amount
+        total_amount = (
+            subtotal + tax_amount
+        )
 
 
         # -------------------------------------------------
@@ -4449,6 +4572,10 @@ def save_sale():
         # -------------------------------------------------
         # 9. INSERT SALE ITEM
         # -------------------------------------------------
+        #
+        # Your BeforeSaleItemInsert trigger checks stock.
+        # Your AfterSaleItemInsert trigger reduces inventory.
+        #
 
         cursor.execute(
             """
@@ -4480,14 +4607,19 @@ def save_sale():
 
 
         # -------------------------------------------------
-        # 10. COMMIT EVERYTHING
+        # 10. COMMIT
         # -------------------------------------------------
 
         conn.commit()
 
 
+        print(
+            f"SALE CREATED SUCCESSFULLY: {sale_id}"
+        )
+
+
         # -------------------------------------------------
-        # 11. SUCCESS
+        # 11. SHOW SALE DETAILS
         # -------------------------------------------------
 
         return redirect(
@@ -4500,7 +4632,7 @@ def save_sale():
         conn.rollback()
 
         print(
-            "ERROR SAVING SALE:",
+            "ERROR CREATING SALE:",
             repr(e)
         )
 
@@ -4519,7 +4651,2044 @@ def save_sale():
         conn.close()
 
 
+# =========================================================
+# SALE DETAILS
+# =========================================================
 
+@app.route(
+    "/sales/view/<sale_id>",
+    methods=["GET"]
+)
+def sale_details(sale_id):
+
+    conn = get_db_connection()
+
+    if conn is None:
+        return "Database connection failed.", 500
+
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+
+        # -------------------------------------------------
+        # GET SALE
+        # -------------------------------------------------
+
+        cursor.execute(
+            """
+            SELECT
+                s.saleID,
+                s.saleDate,
+                s.customerID,
+                s.employeeID,
+                s.totalAmount,
+                s.paymentMethod,
+                s.taxAmount,
+                s.pointsRedeemed,
+
+                CONCAT(c.fName, ' ', c.lName)
+                    AS customerName,
+
+                CONCAT(e.fName, ' ', e.lName)
+                    AS employeeName
+
+            FROM Sale s
+
+            LEFT JOIN Customer c
+                ON s.customerID = c.customerID
+
+            INNER JOIN Employee e
+                ON s.employeeID = e.employeeID
+
+            WHERE s.saleID = %s
+            """,
+            (sale_id,)
+        )
+
+        sale = cursor.fetchone()
+
+
+        if not sale:
+
+            return (
+                f"""
+                <h2>Sale Not Found</h2>
+                <p>Sale ID '{sale_id}' does not exist.</p>
+                <a href="/sales">Back to Sales</a>
+                """,
+                404
+            )
+
+
+        # -------------------------------------------------
+        # GET SALE ITEMS
+        # -------------------------------------------------
+
+        cursor.execute(
+            """
+            SELECT
+                si.saleID,
+                si.productID,
+                p.productName,
+                si.quantity,
+                si.unitPrice,
+                si.discount,
+                si.subTotal
+
+            FROM SaleItem si
+
+            INNER JOIN Product p
+                ON si.productID = p.productID
+
+            WHERE si.saleID = %s
+
+            ORDER BY p.productName
+            """,
+            (sale_id,)
+        )
+
+        items = cursor.fetchall()
+
+
+        return render_template(
+            "sale_details.html",
+            sale=sale,
+            items=items
+        )
+
+
+    except Exception as e:
+
+        print(
+            "ERROR LOADING SALE DETAILS:",
+            repr(e)
+        )
+
+        return str(e), 500
+
+
+    finally:
+
+        cursor.close()
+        conn.close()
+
+
+# =========================================================
+# SALES HELPER FUNCTIONS
+# =========================================================
+
+def get_employees_for_sale():
+
+    conn = get_db_connection()
+
+    if conn is None:
+        return []
+
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+
+        cursor.execute(
+            """
+            SELECT
+                employeeID,
+                fName,
+                lName
+            FROM Employee
+            WHERE status = 'Active'
+            ORDER BY fName, lName
+            """
+        )
+
+        return cursor.fetchall()
+
+    except Exception as e:
+
+        print(
+            "ERROR GETTING EMPLOYEES FOR SALE:",
+            repr(e)
+        )
+
+        return []
+
+    finally:
+
+        cursor.close()
+        conn.close()
+
+
+def get_customers_for_sale():
+
+    conn = get_db_connection()
+
+    if conn is None:
+        return []
+
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+
+        cursor.execute(
+            """
+            SELECT
+                customerID,
+                fName,
+                lName
+            FROM Customer
+            ORDER BY fName, lName
+            """
+        )
+
+        return cursor.fetchall()
+
+    except Exception as e:
+
+        print(
+            "ERROR GETTING CUSTOMERS FOR SALE:",
+            repr(e)
+        )
+
+        return []
+
+    finally:
+
+        cursor.close()
+        conn.close()
+
+
+def get_products_for_sale():
+
+    conn = get_db_connection()
+
+    if conn is None:
+        return []
+
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+
+        cursor.execute(
+            """
+            SELECT
+                p.productID,
+                p.productName,
+                p.unitPrice,
+                i.quantity AS stockQuantity
+
+            FROM Product p
+
+            INNER JOIN Inventory i
+                ON p.productID = i.productID
+
+            WHERE i.quantity > 0
+
+            ORDER BY p.productName
+            """
+        )
+
+        return cursor.fetchall()
+
+    except Exception as e:
+
+        print(
+            "ERROR GETTING PRODUCTS FOR SALE:",
+            repr(e)
+        )
+
+        return []
+
+    finally:
+
+        cursor.close()
+        conn.close()
+        
+# =========================================================
+# PURCHASES
+# =========================================================
+
+
+# =========================================================
+# VIEW ALL PURCHASES
+# =========================================================
+
+@app.route("/purchases")
+def purchases():
+
+    search = request.args.get("search", "").strip()
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+
+        if search:
+
+            search_value = f"%{search}%"
+
+            cursor.execute("""
+                SELECT
+                    pu.purchaseID,
+                    pu.purchaseDate,
+                    pu.totalCost,
+                    pu.status,
+
+                    pu.supplierID,
+                    pu.employeeID,
+
+                    s.supplierName,
+
+                    CONCAT(e.fName, ' ', e.lName) AS employeeName
+
+                FROM Purchase pu
+
+                INNER JOIN Supplier s
+                    ON pu.supplierID = s.supplierID
+
+                INNER JOIN Employee e
+                    ON pu.employeeID = e.employeeID
+
+                WHERE
+                    pu.purchaseID LIKE %s
+                    OR pu.supplierID LIKE %s
+                    OR pu.employeeID LIKE %s
+                    OR pu.status LIKE %s
+                    OR s.supplierName LIKE %s
+                    OR CONCAT(e.fName, ' ', e.lName) LIKE %s
+
+                ORDER BY pu.purchaseDate DESC
+            """, (
+                search_value,
+                search_value,
+                search_value,
+                search_value,
+                search_value,
+                search_value
+            ))
+
+        else:
+
+            cursor.execute("""
+                SELECT
+                    pu.purchaseID,
+                    pu.purchaseDate,
+                    pu.totalCost,
+                    pu.status,
+
+                    pu.supplierID,
+                    pu.employeeID,
+
+                    s.supplierName,
+
+                    CONCAT(e.fName, ' ', e.lName) AS employeeName
+
+                FROM Purchase pu
+
+                INNER JOIN Supplier s
+                    ON pu.supplierID = s.supplierID
+
+                INNER JOIN Employee e
+                    ON pu.employeeID = e.employeeID
+
+                ORDER BY pu.purchaseDate DESC
+            """)
+
+        purchases_list = cursor.fetchall()
+
+
+        return render_template(
+            "purchases.html",
+            purchases=purchases_list,
+            search=search
+        )
+
+
+    except Exception as e:
+
+        print("Error loading purchases:", e)
+
+        return render_template(
+            "purchases.html",
+            purchases=[],
+            search=search,
+            error=str(e)
+        )
+
+
+    finally:
+
+        cursor.close()
+        conn.close()
+
+
+# =========================================================
+# ADD PURCHASE PAGE
+# =========================================================
+
+@app.route("/purchases/add")
+def add_purchase():
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+
+        # -------------------------------------------------
+        # GET SUPPLIERS
+        # -------------------------------------------------
+
+        cursor.execute("""
+            SELECT
+                supplierID,
+                supplierName
+            FROM Supplier
+            ORDER BY supplierName
+        """)
+
+        suppliers = cursor.fetchall()
+
+
+        # -------------------------------------------------
+        # GET EMPLOYEES
+        # -------------------------------------------------
+
+        cursor.execute("""
+            SELECT
+                employeeID,
+                fName,
+                lName
+            FROM Employee
+            ORDER BY fName, lName
+        """)
+
+        employees = cursor.fetchall()
+
+
+        # -------------------------------------------------
+        # GET PRODUCTS
+        # -------------------------------------------------
+
+        cursor.execute("""
+            SELECT
+                productID,
+                productName,
+                costPrice
+            FROM Product
+            WHERE status <> 'Discontinued'
+            ORDER BY productName
+        """)
+
+        products = cursor.fetchall()
+
+
+        return render_template(
+            "add_purchase.html",
+            suppliers=suppliers,
+            employees=employees,
+            products=products
+        )
+
+
+    except Exception as e:
+
+        print("Error loading add purchase page:", e)
+
+        return render_template(
+            "add_purchase.html",
+            suppliers=[],
+            employees=[],
+            products=[],
+            error=str(e)
+        )
+
+
+    finally:
+
+        cursor.close()
+        conn.close()
+
+
+# =========================================================
+# SAVE PURCHASE
+# =========================================================
+
+@app.route("/purchases/save", methods=["POST"])
+def save_purchase():
+
+    purchase_id = request.form.get(
+        "purchaseID",
+        ""
+    ).strip()
+
+    supplier_id = request.form.get(
+        "supplierID",
+        ""
+    ).strip()
+
+    employee_id = request.form.get(
+        "employeeID",
+        ""
+    ).strip()
+
+    product_id = request.form.get(
+        "productID",
+        ""
+    ).strip()
+
+    purchase_date = request.form.get(
+        "purchaseDate",
+        ""
+    ).strip()
+
+    quantity_text = request.form.get(
+        "quantity",
+        ""
+    ).strip()
+
+    unit_cost_text = request.form.get(
+        "unitCost",
+        ""
+    ).strip()
+
+    status = request.form.get(
+        "status",
+        "Completed"
+    ).strip()
+
+
+    # -----------------------------------------------------
+    # BASIC VALIDATION
+    # -----------------------------------------------------
+
+    if not purchase_id:
+
+        return render_template(
+            "add_purchase.html",
+            suppliers=get_purchase_suppliers(),
+            employees=get_purchase_employees(),
+            products=get_purchase_products(),
+            error="Purchase ID is required."
+        )
+
+
+    if not supplier_id:
+
+        return render_template(
+            "add_purchase.html",
+            suppliers=get_purchase_suppliers(),
+            employees=get_purchase_employees(),
+            products=get_purchase_products(),
+            error="Please select a supplier."
+        )
+
+
+    if not employee_id:
+
+        return render_template(
+            "add_purchase.html",
+            suppliers=get_purchase_suppliers(),
+            employees=get_purchase_employees(),
+            products=get_purchase_products(),
+            error="Please select an employee."
+        )
+
+
+    if not product_id:
+
+        return render_template(
+            "add_purchase.html",
+            suppliers=get_purchase_suppliers(),
+            employees=get_purchase_employees(),
+            products=get_purchase_products(),
+            error="Please select a product."
+        )
+
+
+    if not purchase_date:
+
+        return render_template(
+            "add_purchase.html",
+            suppliers=get_purchase_suppliers(),
+            employees=get_purchase_employees(),
+            products=get_purchase_products(),
+            error="Purchase date is required."
+        )
+
+
+    # -----------------------------------------------------
+    # VALIDATE QUANTITY
+    # -----------------------------------------------------
+
+    try:
+
+        quantity = int(quantity_text)
+
+        if quantity <= 0:
+            raise ValueError
+
+    except ValueError:
+
+        return render_template(
+            "add_purchase.html",
+            suppliers=get_purchase_suppliers(),
+            employees=get_purchase_employees(),
+            products=get_purchase_products(),
+            error="Quantity must be a positive whole number."
+        )
+
+
+    # -----------------------------------------------------
+    # VALIDATE UNIT COST
+    # -----------------------------------------------------
+
+    try:
+
+        unit_cost = float(unit_cost_text)
+
+        if unit_cost < 0:
+            raise ValueError
+
+    except ValueError:
+
+        return render_template(
+            "add_purchase.html",
+            suppliers=get_purchase_suppliers(),
+            employees=get_purchase_employees(),
+            products=get_purchase_products(),
+            error="Unit cost must be a valid positive number."
+        )
+
+
+    # -----------------------------------------------------
+    # VALIDATE STATUS
+    # -----------------------------------------------------
+
+    allowed_statuses = [
+        "Pending",
+        "Completed",
+        "Cancelled"
+    ]
+
+    if status not in allowed_statuses:
+
+        return render_template(
+            "add_purchase.html",
+            suppliers=get_purchase_suppliers(),
+            employees=get_purchase_employees(),
+            products=get_purchase_products(),
+            error="Invalid purchase status."
+        )
+
+
+    # -----------------------------------------------------
+    # CALCULATE TOTAL
+    # -----------------------------------------------------
+
+    total_cost = quantity * unit_cost
+
+
+    # -----------------------------------------------------
+    # DATABASE
+    # -----------------------------------------------------
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+
+        # -------------------------------------------------
+        # CHECK PURCHASE ID
+        # -------------------------------------------------
+
+        cursor.execute("""
+            SELECT purchaseID
+            FROM Purchase
+            WHERE purchaseID = %s
+        """, (purchase_id,))
+
+        existing_purchase = cursor.fetchone()
+
+
+        if existing_purchase:
+
+            conn.rollback()
+
+            return render_template(
+                "add_purchase.html",
+                suppliers=get_purchase_suppliers(),
+                employees=get_purchase_employees(),
+                products=get_purchase_products(),
+                error=f"Purchase ID '{purchase_id}' already exists."
+            )
+
+
+        # -------------------------------------------------
+        # CHECK PRODUCT
+        # -------------------------------------------------
+
+        cursor.execute("""
+            SELECT
+                productID,
+                productName
+            FROM Product
+            WHERE productID = %s
+        """, (product_id,))
+
+        product = cursor.fetchone()
+
+
+        if not product:
+
+            conn.rollback()
+
+            return render_template(
+                "add_purchase.html",
+                suppliers=get_purchase_suppliers(),
+                employees=get_purchase_employees(),
+                products=get_purchase_products(),
+                error="Selected product was not found."
+            )
+
+
+        # -------------------------------------------------
+        # INSERT PURCHASE
+        # -------------------------------------------------
+
+        cursor.execute("""
+            INSERT INTO Purchase
+            (
+                purchaseID,
+                supplierID,
+                employeeID,
+                purchaseDate,
+                totalCost,
+                status
+            )
+            VALUES
+            (
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s
+            )
+        """, (
+            purchase_id,
+            supplier_id,
+            employee_id,
+            purchase_date,
+            total_cost,
+            status
+        ))
+
+
+        # -------------------------------------------------
+        # INSERT PURCHASE ITEM
+        # -------------------------------------------------
+
+        cursor.execute("""
+            INSERT INTO PurchaseItem
+            (
+                purchaseID,
+                productID,
+                quantity,
+                unitCost
+            )
+            VALUES
+            (
+                %s,
+                %s,
+                %s,
+                %s
+            )
+        """, (
+            purchase_id,
+            product_id,
+            quantity,
+            unit_cost
+        ))
+
+
+        # -------------------------------------------------
+        # UPDATE INVENTORY
+        # -------------------------------------------------
+
+        cursor.execute("""
+            UPDATE Inventory
+            SET
+                quantity = quantity + %s,
+                lastUpdated = CURRENT_TIMESTAMP
+            WHERE productID = %s
+        """, (
+            quantity,
+            product_id
+        ))
+
+
+        # -------------------------------------------------
+        # CREATE INVENTORY RECORD IF NECESSARY
+        # -------------------------------------------------
+
+        if cursor.rowcount == 0:
+
+            cursor.execute("""
+                SELECT
+                    productID
+                FROM Inventory
+                WHERE productID = %s
+            """, (product_id,))
+
+            inventory_exists = cursor.fetchone()
+
+
+            if not inventory_exists:
+
+                cursor.execute("""
+                    SELECT
+                        COALESCE(
+                            MAX(
+                                CAST(
+                                    SUBSTRING(inventoryID, 4)
+                                    AS UNSIGNED
+                                )
+                            ),
+                            0
+                        ) + 1 AS nextNumber
+                    FROM Inventory
+                """)
+
+                next_number = cursor.fetchone()["nextNumber"]
+
+                inventory_id = f"INV{int(next_number):03d}"
+
+
+                cursor.execute("""
+                    INSERT INTO Inventory
+                    (
+                        inventoryID,
+                        productID,
+                        quantity,
+                        reorderLevel,
+                        lastUpdated
+                    )
+                    VALUES
+                    (
+                        %s,
+                        %s,
+                        %s,
+                        10,
+                        CURRENT_TIMESTAMP
+                    )
+                """, (
+                    inventory_id,
+                    product_id,
+                    quantity
+                ))
+
+
+        # -------------------------------------------------
+        # COMMIT
+        # -------------------------------------------------
+
+        conn.commit()
+
+
+        return redirect(
+            url_for("purchases")
+        )
+
+
+    except Exception as e:
+
+        conn.rollback()
+
+        print("Error saving purchase:", e)
+
+        return render_template(
+            "add_purchase.html",
+            suppliers=get_purchase_suppliers(),
+            employees=get_purchase_employees(),
+            products=get_purchase_products(),
+            error=str(e)
+        )
+
+
+    finally:
+
+        cursor.close()
+        conn.close()
+
+
+# =========================================================
+# VIEW INDIVIDUAL PURCHASE
+# =========================================================
+
+@app.route("/purchases/view/<purchase_id>")
+def view_purchase(purchase_id):
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+
+        # -------------------------------------------------
+        # GET PURCHASE
+        # -------------------------------------------------
+
+        cursor.execute("""
+            SELECT
+                pu.purchaseID,
+                pu.purchaseDate,
+                pu.totalCost,
+                pu.status,
+
+                pu.supplierID,
+                pu.employeeID,
+
+                s.supplierName,
+
+                CONCAT(
+                    e.fName,
+                    ' ',
+                    e.lName
+                ) AS employeeName
+
+            FROM Purchase pu
+
+            INNER JOIN Supplier s
+                ON pu.supplierID = s.supplierID
+
+            INNER JOIN Employee e
+                ON pu.employeeID = e.employeeID
+
+            WHERE pu.purchaseID = %s
+        """, (purchase_id,))
+
+        purchase = cursor.fetchone()
+
+
+        if not purchase:
+
+            return redirect(
+                url_for("purchases")
+            )
+
+
+        # -------------------------------------------------
+        # GET PURCHASE ITEMS
+        # -------------------------------------------------
+
+        cursor.execute("""
+            SELECT
+                pi.productID,
+                pi.quantity,
+                pi.unitCost,
+
+                p.productName,
+
+                (
+                    pi.quantity * pi.unitCost
+                ) AS itemTotal
+
+            FROM PurchaseItem pi
+
+            INNER JOIN Product p
+                ON pi.productID = p.productID
+
+            WHERE pi.purchaseID = %s
+
+            ORDER BY p.productName
+        """, (purchase_id,))
+
+        items = cursor.fetchall()
+
+
+        return render_template(
+            "purchase_details.html",
+            purchase=purchase,
+            items=items
+        )
+
+
+    except Exception as e:
+
+        print(
+            "Error viewing purchase:",
+            e
+        )
+
+        return render_template(
+            "purchase_details.html",
+            purchase=None,
+            items=[],
+            error=str(e)
+        )
+
+
+    finally:
+
+        cursor.close()
+        conn.close()
+
+
+# =========================================================
+# EDIT PURCHASE PAGE
+# =========================================================
+
+@app.route("/purchases/edit/<purchase_id>")
+def edit_purchase(purchase_id):
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+
+        # -------------------------------------------------
+        # GET PURCHASE
+        # -------------------------------------------------
+
+        cursor.execute("""
+            SELECT
+                purchaseID,
+                supplierID,
+                employeeID,
+                purchaseDate,
+                totalCost,
+                status
+
+            FROM Purchase
+
+            WHERE purchaseID = %s
+        """, (purchase_id,))
+
+        purchase = cursor.fetchone()
+
+
+        if not purchase:
+
+            return redirect(
+                url_for("purchases")
+            )
+
+
+        # -------------------------------------------------
+        # GET PURCHASE ITEM
+        # -------------------------------------------------
+
+        cursor.execute("""
+            SELECT
+                productID,
+                quantity,
+                unitCost
+
+            FROM PurchaseItem
+
+            WHERE purchaseID = %s
+
+            LIMIT 1
+        """, (purchase_id,))
+
+        item = cursor.fetchone()
+
+
+        # -------------------------------------------------
+        # GET SUPPLIERS
+        # -------------------------------------------------
+
+        cursor.execute("""
+            SELECT
+                supplierID,
+                supplierName
+
+            FROM Supplier
+
+            ORDER BY supplierName
+        """)
+
+        suppliers = cursor.fetchall()
+
+
+        # -------------------------------------------------
+        # GET EMPLOYEES
+        # -------------------------------------------------
+
+        cursor.execute("""
+            SELECT
+                employeeID,
+                fName,
+                lName
+
+            FROM Employee
+
+            ORDER BY fName, lName
+        """)
+
+        employees = cursor.fetchall()
+
+
+        # -------------------------------------------------
+        # GET PRODUCTS
+        # -------------------------------------------------
+
+        cursor.execute("""
+            SELECT
+                productID,
+                productName,
+                costPrice
+
+            FROM Product
+
+            WHERE status <> 'Discontinued'
+
+            ORDER BY productName
+        """)
+
+        products = cursor.fetchall()
+
+
+        return render_template(
+            "edit_purchase.html",
+            purchase=purchase,
+            item=item,
+            suppliers=suppliers,
+            employees=employees,
+            products=products
+        )
+
+
+    except Exception as e:
+
+        print(
+            "Error loading edit purchase:",
+            e
+        )
+
+        return render_template(
+            "edit_purchase.html",
+            purchase=None,
+            item=None,
+            suppliers=[],
+            employees=[],
+            products=[],
+            error=str(e)
+        )
+
+
+    finally:
+
+        cursor.close()
+        conn.close()
+
+
+# =========================================================
+# UPDATE PURCHASE
+# =========================================================
+
+@app.route(
+    "/purchases/update/<purchase_id>",
+    methods=["POST"]
+)
+def update_purchase(purchase_id):
+
+    supplier_id = request.form.get(
+        "supplierID",
+        ""
+    ).strip()
+
+    employee_id = request.form.get(
+        "employeeID",
+        ""
+    ).strip()
+
+    purchase_date = request.form.get(
+        "purchaseDate",
+        ""
+    ).strip()
+
+    product_id = request.form.get(
+        "productID",
+        ""
+    ).strip()
+
+    status = request.form.get(
+        "status",
+        ""
+    ).strip()
+
+
+    # -----------------------------------------------------
+    # VALIDATE QUANTITY AND COST
+    # -----------------------------------------------------
+
+    try:
+
+        quantity = int(
+            request.form.get(
+                "quantity",
+                "0"
+            )
+        )
+
+        unit_cost = float(
+            request.form.get(
+                "unitCost",
+                "0"
+            )
+        )
+
+    except ValueError:
+
+        return redirect(
+            url_for(
+                "edit_purchase",
+                purchase_id=purchase_id
+            )
+        )
+
+
+    if quantity <= 0 or unit_cost < 0:
+
+        return redirect(
+            url_for(
+                "edit_purchase",
+                purchase_id=purchase_id
+            )
+        )
+
+
+    # -----------------------------------------------------
+    # VALIDATE REQUIRED FIELDS
+    # -----------------------------------------------------
+
+    if not supplier_id or not employee_id:
+
+        return redirect(
+            url_for(
+                "edit_purchase",
+                purchase_id=purchase_id
+            )
+        )
+
+
+    if not product_id or not purchase_date:
+
+        return redirect(
+            url_for(
+                "edit_purchase",
+                purchase_id=purchase_id
+            )
+        )
+
+
+    allowed_statuses = [
+        "Pending",
+        "Completed",
+        "Cancelled"
+    ]
+
+    if status not in allowed_statuses:
+
+        return redirect(
+            url_for(
+                "edit_purchase",
+                purchase_id=purchase_id
+            )
+        )
+
+
+    # -----------------------------------------------------
+    # CALCULATE TOTAL
+    # -----------------------------------------------------
+
+    total_cost = quantity * unit_cost
+
+
+    # -----------------------------------------------------
+    # DATABASE
+    # -----------------------------------------------------
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+
+        # -------------------------------------------------
+        # GET OLD PURCHASE ITEM
+        # -------------------------------------------------
+
+        cursor.execute("""
+            SELECT
+                productID,
+                quantity,
+                unitCost
+
+            FROM PurchaseItem
+
+            WHERE purchaseID = %s
+
+            LIMIT 1
+        """, (purchase_id,))
+
+        old_item = cursor.fetchone()
+
+
+        if not old_item:
+
+            raise Exception(
+                "Purchase item was not found."
+            )
+
+
+        old_product_id = old_item["productID"]
+        old_quantity = old_item["quantity"]
+
+
+        # -------------------------------------------------
+        # REVERSE OLD INVENTORY
+        # -------------------------------------------------
+
+        cursor.execute("""
+            UPDATE Inventory
+
+            SET
+                quantity = quantity - %s,
+                lastUpdated = CURRENT_TIMESTAMP
+
+            WHERE productID = %s
+        """, (
+            old_quantity,
+            old_product_id
+        ))
+
+
+        # -------------------------------------------------
+        # UPDATE PURCHASE
+        # -------------------------------------------------
+
+        cursor.execute("""
+            UPDATE Purchase
+
+            SET
+                supplierID = %s,
+                employeeID = %s,
+                purchaseDate = %s,
+                totalCost = %s,
+                status = %s
+
+            WHERE purchaseID = %s
+        """, (
+            supplier_id,
+            employee_id,
+            purchase_date,
+            total_cost,
+            status,
+            purchase_id
+        ))
+
+
+        # -------------------------------------------------
+        # UPDATE PURCHASE ITEM
+        # -------------------------------------------------
+
+        cursor.execute("""
+            UPDATE PurchaseItem
+
+            SET
+                productID = %s,
+                quantity = %s,
+                unitCost = %s
+
+            WHERE purchaseID = %s
+        """, (
+            product_id,
+            quantity,
+            unit_cost,
+            purchase_id
+        ))
+
+
+        # -------------------------------------------------
+        # ADD NEW INVENTORY
+        # -------------------------------------------------
+
+        cursor.execute("""
+            UPDATE Inventory
+
+            SET
+                quantity = quantity + %s,
+                lastUpdated = CURRENT_TIMESTAMP
+
+            WHERE productID = %s
+        """, (
+            quantity,
+            product_id
+        ))
+
+
+        # -------------------------------------------------
+        # CREATE INVENTORY IF NECESSARY
+        # -------------------------------------------------
+
+        if cursor.rowcount == 0:
+
+            cursor.execute("""
+                SELECT
+                    productID
+
+                FROM Inventory
+
+                WHERE productID = %s
+            """, (product_id,))
+
+            inventory_exists = cursor.fetchone()
+
+
+            if not inventory_exists:
+
+                cursor.execute("""
+                    SELECT
+                        COALESCE(
+                            MAX(
+                                CAST(
+                                    SUBSTRING(
+                                        inventoryID,
+                                        4
+                                    ) AS UNSIGNED
+                                )
+                            ),
+                            0
+                        ) + 1 AS nextNumber
+
+                    FROM Inventory
+                """)
+
+                next_number = cursor.fetchone()[
+                    "nextNumber"
+                ]
+
+                inventory_id = (
+                    f"INV{int(next_number):03d}"
+                )
+
+
+                cursor.execute("""
+                    INSERT INTO Inventory
+                    (
+                        inventoryID,
+                        productID,
+                        quantity,
+                        reorderLevel,
+                        lastUpdated
+                    )
+
+                    VALUES
+                    (
+                        %s,
+                        %s,
+                        %s,
+                        10,
+                        CURRENT_TIMESTAMP
+                    )
+                """, (
+                    inventory_id,
+                    product_id,
+                    quantity
+                ))
+
+
+        # -------------------------------------------------
+        # COMMIT
+        # -------------------------------------------------
+
+        conn.commit()
+
+
+        return redirect(
+            url_for(
+                "view_purchase",
+                purchase_id=purchase_id
+            )
+        )
+
+
+    except Exception as e:
+
+        conn.rollback()
+
+        print(
+            "Error updating purchase:",
+            e
+        )
+
+        return redirect(
+            url_for(
+                "edit_purchase",
+                purchase_id=purchase_id
+            )
+        )
+
+
+    finally:
+
+        cursor.close()
+        conn.close()
+
+
+# =========================================================
+# PURCHASE HELPER FUNCTIONS
+# =========================================================
+
+def get_purchase_suppliers():
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+
+        cursor.execute("""
+            SELECT
+                supplierID,
+                supplierName
+
+            FROM Supplier
+
+            ORDER BY supplierName
+        """)
+
+        return cursor.fetchall()
+
+    finally:
+
+        cursor.close()
+        conn.close()
+
+
+def get_purchase_employees():
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+
+        cursor.execute("""
+            SELECT
+                employeeID,
+                fName,
+                lName
+
+            FROM Employee
+
+            ORDER BY fName, lName
+        """)
+
+        return cursor.fetchall()
+
+    finally:
+
+        cursor.close()
+        conn.close()
+
+
+def get_purchase_products():
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+
+        cursor.execute("""
+            SELECT
+                productID,
+                productName,
+                costPrice
+
+            FROM Product
+
+            WHERE status <> 'Discontinued'
+
+            ORDER BY productName
+        """)
+
+        return cursor.fetchall()
+
+    finally:
+
+        cursor.close()
+        conn.close()
+
+# =========================================================
+# DELETE PURCHASE
+# =========================================================
+
+@app.route(
+    "/purchases/delete/<purchase_id>",
+    methods=["POST"]
+)
+def delete_purchase(purchase_id):
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+
+        # -------------------------------------------------
+        # GET PURCHASE ITEM
+        # -------------------------------------------------
+
+        cursor.execute("""
+            SELECT
+                productID,
+                quantity
+            FROM PurchaseItem
+            WHERE purchaseID = %s
+            LIMIT 1
+        """, (purchase_id,))
+
+        item = cursor.fetchone()
+
+
+        # -------------------------------------------------
+        # CHECK PURCHASE EXISTS
+        # -------------------------------------------------
+
+        if not item:
+
+            return redirect(
+                url_for("purchases")
+            )
+
+
+        product_id = item["productID"]
+        quantity = item["quantity"]
+
+
+        # -------------------------------------------------
+        # REVERSE INVENTORY
+        # -------------------------------------------------
+
+        cursor.execute("""
+            UPDATE Inventory
+            SET
+                quantity = quantity - %s,
+                lastUpdated = CURRENT_TIMESTAMP
+            WHERE productID = %s
+        """, (
+            quantity,
+            product_id
+        ))
+
+
+        # -------------------------------------------------
+        # DELETE PURCHASE ITEM
+        # -------------------------------------------------
+
+        cursor.execute("""
+            DELETE FROM PurchaseItem
+            WHERE purchaseID = %s
+        """, (purchase_id,))
+
+
+        # -------------------------------------------------
+        # DELETE PURCHASE
+        # -------------------------------------------------
+
+        cursor.execute("""
+            DELETE FROM Purchase
+            WHERE purchaseID = %s
+        """, (purchase_id,))
+
+
+        # -------------------------------------------------
+        # COMMIT
+        # -------------------------------------------------
+
+        conn.commit()
+
+
+        return redirect(
+            url_for("purchases")
+        )
+
+
+    except Exception as e:
+
+        conn.rollback()
+
+        print(
+            "Error deleting purchase:",
+            e
+        )
+
+        return redirect(
+            url_for(
+                "purchases",
+                error=str(e)
+            )
+        )
+
+
+    finally:
+
+        cursor.close()
+        conn.close()
+
+# =========================================================
+# REPORTS
+# =========================================================
+
+@app.route("/reports")
+def reports():
+
+    period = request.args.get("period", "all").strip().lower()
+
+    conn = get_db_connection()
+
+    if conn is None:
+        return "Database connection failed.", 500
+
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+
+        # =================================================
+        # DETERMINE REPORT PERIOD
+        # =================================================
+
+        period_labels = {
+            "today": "Today",
+            "week": "This Week",
+            "month": "This Month",
+            "all": "All Time"
+        }
+
+        period_label = period_labels.get(
+            period,
+            "All Time"
+        )
+
+        # -------------------------------------------------
+        # DATE FILTER
+        # -------------------------------------------------
+
+        if period == "today":
+
+            date_filter = """
+                DATE(s.saleDate) = CURDATE()
+            """
+
+            purchase_date_filter = """
+                DATE(pu.purchaseDate) = CURDATE()
+            """
+
+        elif period == "week":
+
+            date_filter = """
+                YEARWEEK(s.saleDate, 1)
+                = YEARWEEK(CURDATE(), 1)
+            """
+
+            purchase_date_filter = """
+                YEARWEEK(pu.purchaseDate, 1)
+                = YEARWEEK(CURDATE(), 1)
+            """
+
+        elif period == "month":
+
+            date_filter = """
+                YEAR(s.saleDate) = YEAR(CURDATE())
+                AND MONTH(s.saleDate) = MONTH(CURDATE())
+            """
+
+            purchase_date_filter = """
+                YEAR(pu.purchaseDate) = YEAR(CURDATE())
+                AND MONTH(pu.purchaseDate) = MONTH(CURDATE())
+            """
+
+        else:
+
+            date_filter = "1 = 1"
+
+            purchase_date_filter = "1 = 1"
+
+
+        # =================================================
+        # SALES REPORT
+        # =================================================
+
+        cursor.execute(f"""
+            SELECT
+
+                COUNT(*) AS total_transactions,
+
+                COALESCE(
+                    SUM(totalAmount),
+                    0
+                ) AS total_sales,
+
+                COALESCE(
+                    AVG(totalAmount),
+                    0
+                ) AS average_sale
+
+            FROM Sale s
+
+            WHERE {date_filter}
+        """)
+
+        sales_report = cursor.fetchone()
+
+
+        # =================================================
+        # PURCHASE REPORT
+        # =================================================
+
+        cursor.execute(f"""
+            SELECT
+
+                COUNT(*) AS total_purchases,
+
+                COALESCE(
+                    SUM(totalCost),
+                    0
+                ) AS total_purchase_cost
+
+            FROM Purchase pu
+
+            WHERE {purchase_date_filter}
+        """)
+
+        purchase_report = cursor.fetchone()
+
+
+        # =================================================
+        # INVENTORY REPORT
+        # =================================================
+        # Inventory is current, so it does not change
+        # according to the selected date.
+
+        cursor.execute("""
+            SELECT
+
+                COUNT(*) AS total_products,
+
+                COALESCE(
+                    SUM(
+                        CASE
+                            WHEN quantity <= 5
+                            THEN 1
+                            ELSE 0
+                        END
+                    ),
+                    0
+                ) AS low_stock_products,
+
+                COALESCE(
+                    SUM(
+                        CASE
+                            WHEN quantity <= 0
+                            THEN 1
+                            ELSE 0
+                        END
+                    ),
+                    0
+                ) AS out_of_stock_products
+
+            FROM Inventory
+        """)
+
+        inventory_report = cursor.fetchone()
+
+
+        # =================================================
+        # CUSTOMER REPORT
+        # =================================================
+
+        cursor.execute("""
+            SELECT
+                COUNT(*) AS total_customers
+            FROM Customer
+        """)
+
+        customer_report = cursor.fetchone()
+
+
+        # =================================================
+        # SUPPLIER REPORT
+        # =================================================
+
+        cursor.execute("""
+            SELECT
+                COUNT(*) AS total_suppliers
+            FROM Supplier
+        """)
+
+        supplier_report = cursor.fetchone()
+
+
+        # =================================================
+        # CATEGORY REPORT
+        # =================================================
+
+        cursor.execute("""
+            SELECT
+                COUNT(*) AS total_categories
+            FROM Category
+        """)
+
+        category_report = cursor.fetchone()
+
+
+        # =================================================
+        # PAYMENT METHOD REPORT
+        # =================================================
+
+        cursor.execute(f"""
+            SELECT
+
+                s.paymentMethod,
+
+                COUNT(*) AS transaction_count,
+
+                COALESCE(
+                    SUM(s.totalAmount),
+                    0
+                ) AS total_amount
+
+            FROM Sale s
+
+            WHERE {date_filter}
+
+            GROUP BY s.paymentMethod
+
+            ORDER BY total_amount DESC
+        """)
+
+        payment_methods = cursor.fetchall()
+
+
+        # =================================================
+        # RECENT SALES
+        # =================================================
+
+        cursor.execute(f"""
+            SELECT
+
+                s.saleID,
+
+                s.saleDate,
+
+                s.totalAmount,
+
+                s.paymentMethod,
+
+                CONCAT(
+                    c.fName,
+                    ' ',
+                    c.lName
+                ) AS customerName
+
+            FROM Sale s
+
+            LEFT JOIN Customer c
+
+                ON s.customerID =
+                   c.customerID
+
+            WHERE {date_filter}
+
+            ORDER BY s.saleDate DESC
+
+            LIMIT 10
+        """)
+
+        recent_sales = cursor.fetchall()
+
+
+        # =================================================
+        # LOW STOCK PRODUCTS
+        # =================================================
+
+        cursor.execute("""
+            SELECT
+
+                p.productID,
+
+                p.productName,
+
+                i.quantity
+
+            FROM Inventory i
+
+            INNER JOIN Product p
+
+                ON i.productID =
+                   p.productID
+
+            WHERE i.quantity <= 5
+
+            ORDER BY i.quantity ASC
+        """)
+
+        low_stock_products = cursor.fetchall()
+
+
+        # =================================================
+        # RENDER REPORT
+        # =================================================
+
+        return render_template(
+
+            "reports.html",
+
+            period=period,
+
+            period_label=period_label,
+
+            sales_report=sales_report,
+
+            purchase_report=purchase_report,
+
+            inventory_report=inventory_report,
+
+            customer_report=customer_report,
+
+            supplier_report=supplier_report,
+
+            category_report=category_report,
+
+            payment_methods=payment_methods,
+
+            recent_sales=recent_sales,
+
+            low_stock_products=low_stock_products
+
+        )
+
+
+    except Exception as e:
+
+        print(
+            "ERROR LOADING REPORTS:",
+            repr(e)
+        )
+
+        return render_template(
+
+            "reports.html",
+
+            period=period,
+
+            period_label=period_label,
+
+            error=str(e)
+
+        )
+
+
+    finally:
+
+        cursor.close()
+        conn.close()
 # ==========================================
 # RUN APPLICATION
 # ==========================================

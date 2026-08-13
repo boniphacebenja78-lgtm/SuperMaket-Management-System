@@ -1,0 +1,337 @@
+{% extends "base.html" %}
+
+{% block title %}
+Purchase Details — Supermarket Management System
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+
+    <div>
+        <h1>Purchase Details</h1>
+        <p>View complete information about this purchase</p>
+    </div>
+
+    <a
+        href="{{ url_for('purchases') }}"
+        class="btn btn-secondary"
+    >
+        ← Back to Purchases
+    </a>
+
+</div>
+
+
+{% if error %}
+
+<div class="error">
+    <strong>Database Error:</strong>
+    {{ error }}
+</div>
+
+{% endif %}
+
+
+{% if purchase %}
+
+<!-- ===================================================== -->
+<!-- PURCHASE INFORMATION -->
+<!-- ===================================================== -->
+
+<div class="details-card">
+
+    <div class="details-header">
+
+        <div>
+
+            <h2>
+                Purchase {{ purchase.purchaseID }}
+            </h2>
+
+            <p>
+                Purchase Information
+            </p>
+
+        </div>
+
+        {% if purchase.status == "Completed" %}
+
+            <span class="status-badge status-success">
+                Completed
+            </span>
+
+        {% elif purchase.status == "Pending" %}
+
+            <span class="status-badge status-warning">
+                Pending
+            </span>
+
+        {% elif purchase.status == "Cancelled" %}
+
+            <span class="status-badge status-danger">
+                Cancelled
+            </span>
+
+        {% else %}
+
+            <span class="status-badge">
+                {{ purchase.status }}
+            </span>
+
+        {% endif %}
+
+    </div>
+
+
+    <!-- PURCHASE DETAILS -->
+
+    <div class="details-grid">
+
+        <div class="detail-item">
+
+            <span>Purchase ID</span>
+
+            <strong>
+                {{ purchase.purchaseID }}
+            </strong>
+
+        </div>
+
+
+        <div class="detail-item">
+
+            <span>Purchase Date</span>
+
+            <strong>
+                {{ purchase.purchaseDate }}
+            </strong>
+
+        </div>
+
+
+        <div class="detail-item">
+
+            <span>Supplier</span>
+
+            <strong>
+                {{ purchase.supplierName }}
+            </strong>
+
+            <small>
+                {{ purchase.supplierID }}
+            </small>
+
+        </div>
+
+
+        <div class="detail-item">
+
+            <span>Employee</span>
+
+            <strong>
+                {{ purchase.employeeName }}
+            </strong>
+
+            <small>
+                {{ purchase.employeeID }}
+            </small>
+
+        </div>
+
+
+        <div class="detail-item">
+
+            <span>Status</span>
+
+            <strong>
+                {{ purchase.status }}
+            </strong>
+
+        </div>
+
+
+        <div class="detail-item">
+
+            <span>Total Cost</span>
+
+            <strong>
+                GHS {{ "%.2f"|format(purchase.totalCost or 0) }}
+            </strong>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- PURCHASE ITEMS -->
+<!-- ===================================================== -->
+
+<div class="details-card">
+
+    <div class="details-header">
+
+        <div>
+
+            <h2>Purchased Products</h2>
+
+            <p>
+                Products included in this purchase
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <div class="table-container">
+
+        <table class="data-table">
+
+            <thead>
+
+                <tr>
+
+                    <th>Product ID</th>
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    <th>Unit Cost</th>
+                    <th>Total</th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% if items %}
+
+                    {% for item in items %}
+
+                    <tr>
+
+                        <td>
+                            {{ item.productID }}
+                        </td>
+
+                        <td>
+                            {{ item.productName }}
+                        </td>
+
+                        <td>
+                            {{ item.quantity }}
+                        </td>
+
+                        <td>
+                            GHS {{ "%.2f"|format(item.unitCost or 0) }}
+                        </td>
+
+                        <td>
+
+                            <strong>
+                                GHS {{ "%.2f"|format(item.itemTotal or 0) }}
+                            </strong>
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                {% else %}
+
+                    <tr>
+
+                        <td
+                            colspan="5"
+                            style="text-align:center; padding:30px;"
+                        >
+                            No products found for this purchase.
+                        </td>
+
+                    </tr>
+
+                {% endif %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+    <!-- TOTAL -->
+
+    <div class="purchase-total">
+
+        <span>
+            Total Purchase Cost
+        </span>
+
+        <strong>
+            GHS {{ "%.2f"|format(purchase.totalCost or 0) }}
+        </strong>
+
+    </div>
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- ACTION BUTTONS -->
+<!-- ===================================================== -->
+
+<div class="form-actions">
+
+    <a
+        href="{{ url_for(
+            'edit_purchase',
+            purchase_id=purchase.purchaseID
+        ) }}"
+        class="btn btn-primary"
+    >
+        Edit Purchase
+    </a>
+
+
+    <form
+        method="POST"
+        action="{{ url_for(
+            'delete_purchase',
+            purchase_id=purchase.purchaseID
+        ) }}"
+        style="display:inline;"
+
+        onsubmit="
+            return confirm(
+                'Are you sure you want to delete this purchase?'
+            );
+        "
+    >
+
+        <button
+            type="submit"
+            class="btn btn-danger"
+        >
+            Delete Purchase
+        </button>
+
+    </form>
+
+
+    <a
+        href="{{ url_for('purchases') }}"
+        class="btn btn-secondary"
+    >
+        Back
+    </a>
+
+</div>
+
+{% endif %}
+
+{% endblock %}
