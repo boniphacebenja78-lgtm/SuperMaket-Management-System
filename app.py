@@ -1,242 +1,263 @@
-from flask import Flask, render_template, request, redirect, url_for
+# =========================================================
+# IMPORTS
+# =========================================================
+
 from services.database import get_db_connection
+
+from flask import (
+    Flask,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    session
+)
+
+from werkzeug.security import (
+    generate_password_hash,
+    check_password_hash
+)
+
+from auth import (
+    authenticate_user,
+    get_user_role,
+    login_required,
+    role_required
+)
 
 app = Flask(__name__)
 
+app.secret_key = "supermarket_management_secret_key_2026"
 
-# ==========================================
+# =========================================================
+# LOGIN
+# =========================================================
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+
+    # -----------------------------------------------------
+    # ALREADY LOGGED IN
+    # -----------------------------------------------------
+
+    if "employee_id" in session:
+
+        return redirect(
+            url_for("dashboard")
+        )
+
+    # -----------------------------------------------------
+    # LOGIN FORM SUBMITTED
+    # -----------------------------------------------------
+
+    if request.method == "POST":
+
+        login_value = request.form.get(
+            "employee_id",
+            ""
+        ).strip()
+
+        password = request.form.get(
+            "password",
+            ""
+        )
+
+
+        # -------------------------------------------------
+        # CHECK EMPTY FIELDS
+        # -------------------------------------------------
+
+        if not login_value or not password:
+
+            return render_template(
+                "login.html",
+                error="Employee ID/email and password are required."
+            )
+
+
+        # -------------------------------------------------
+        # AUTHENTICATE USER
+        # -------------------------------------------------
+
+        user = authenticate_user(
+            login_value,
+            password
+        )
+
+
+        # -------------------------------------------------
+        # LOGIN FAILED
+        # -------------------------------------------------
+
+        if user is None:
+
+            return render_template(
+                "login.html",
+                error="Invalid Employee ID/email or password."
+            )
+
+
+        # -------------------------------------------------
+        # CLEAR OLD SESSION
+        # -------------------------------------------------
+
+        session.clear()
+
+
+        # -------------------------------------------------
+        # CREATE USER SESSION
+        # -------------------------------------------------
+
+        session["employee_id"] = (
+            user["employeeID"]
+        )
+
+
+        session["employee_name"] = (
+            user["fName"]
+            + " "
+            + user["lName"]
+        )
+
+
+        session["position"] = (
+            user["position"]
+        )
+
+
+        session["email"] = (
+            user["email"]
+        )
+
+
+        session["role"] = (
+            user["role"]
+        )
+
+
+        # -------------------------------------------------
+        # LOGIN SUCCESS
+        # -------------------------------------------------
+
+        print(
+            "LOGIN SUCCESS:",
+            user["employeeID"],
+            "ROLE:",
+            user["role"]
+        )
+
+
+        return redirect(
+            url_for("dashboard")
+        )
+
+
+    # -----------------------------------------------------
+    # SHOW LOGIN PAGE
+    # -----------------------------------------------------
+
+    return render_template(
+        "login.html"
+    )
+
+
+# =========================================================
+# LOGOUT
+# =========================================================
+
+@app.route("/logout")
+def logout():
+
+    session.clear()
+
+    return redirect(
+        url_for("login")
+    )
+    
+# =========================================================
 # DASHBOARD
-# ==========================================
-
+# =========================================================
 
 @app.route("/")
-def home():
+@login_required
+def dashboard():
 
-    connection = get_db_connection()
-
-    if not connection:
-        return render_template(
-            "index.html",
-            error="Could not connect to MariaDB."
-        )
-
-    try:
-
-        cursor = connection.cursor()
-
-        # ==========================================
-        # TOTAL PRODUCTS
-        # ==========================================
-
-        cursor.execute("""
-            SELECT COUNT(*)
-            FROM product
-        """)
-
-        products = cursor.fetchone()[0]
-
-
-        # ==========================================
-        # TOTAL CATEGORIES
-        # ==========================================
-
-        cursor.execute("""
-            SELECT COUNT(*)
-            FROM category
-        """)
-
-        categories = cursor.fetchone()[0]
-
-
-        # ==========================================
-        # TOTAL CUSTOMERS
-        # ==========================================
-
-        cursor.execute("""
-            SELECT COUNT(*)
-            FROM customer
-        """)
-
-        customers = cursor.fetchone()[0]
-
-
-        # ==========================================
-        # TOTAL SUPPLIERS
-        # ==========================================
-
-        cursor.execute("""
-            SELECT COUNT(*)
-            FROM supplier
-        """)
-
-        suppliers = cursor.fetchone()[0]
-
-
-        # ==========================================
-        # TOTAL SALES
-        # ==========================================
-
-        cursor.execute("""
-            SELECT COUNT(*)
-            FROM sale
-        """)
-
-        total_sales = cursor.fetchone()[0]
-
-
-        # ==========================================
-        # LOW STOCK PRODUCTS
-        # ==========================================
-
-        cursor.execute("""
-            SELECT COUNT(*)
-            FROM inventory
-            WHERE quantity > 0
-            AND quantity <= reorderLevel
-        """)
-
-        low_stock = cursor.fetchone()[0]
-
-
-        # ==========================================
-        # TODAY'S REVENUE
-        # ==========================================
-
-        cursor.execute("""
-            SELECT COALESCE(SUM(totalAmount), 0)
-            FROM sale
-            WHERE DATE(saleDate) = CURDATE()
-        """)
-
-        today_revenue = cursor.fetchone()[0]
-
-
-        # ==========================================
-        # CLOSE DATABASE
-        # ==========================================
-
-        cursor.close()
-        connection.close()
-
-
-        # ==========================================
-        # SEND DATA TO DASHBOARD
-        # ==========================================
-
-        return render_template(
-            "index.html",
-
-            products=products,
-
-            categories=categories,
-
-            customers=customers,
-
-            suppliers=suppliers,
-
-            total_sales=total_sales,
-
-            low_stock=low_stock,
-
-            today_revenue=today_revenue
-        )
-
-
-    except Exception as e:
-
-        if connection:
-            connection.close()
-
-        return render_template(
-            "index.html",
-            error=str(e)
-        )
-
-
-
-# ==========================================
-# VIEW PRODUCTS
-# ==========================================
+    return render_template(
+        "dashboard.html"
+    )
+# =========================================================
+# PRODUCTS
+# =========================================================
 
 @app.route("/products")
+@login_required
 def products():
 
     connection = get_db_connection()
 
+    search = request.args.get("search", "").strip()
+
     if not connection:
-        return "Database connection failed."
+        return render_template(
+            "products.html",
+            products=[],
+            search=search,
+            error="Database connection failed."
+        )
+
+    cursor = connection.cursor()
 
     try:
 
-        search = request.args.get("search", "").strip()
+        query = """
+            SELECT
+                p.productID,
+                p.productName,
+                c.categoryName,
+                s.supplierName,
+                p.unitPrice,
+                p.costPrice,
+                p.expiryDate,
+                p.status,
+                p.barcode
+            FROM Product p
 
-        cursor = connection.cursor()
+            LEFT JOIN Category c
+                ON p.categoryID = c.categoryID
 
+            LEFT JOIN Supplier s
+                ON p.supplierID = s.supplierID
+        """
+
+        params = []
+
+        # SEARCH
         if search:
 
-            query = """
-                SELECT
-                    p.productID,
-                    p.productName,
-                    c.categoryName,
-                    s.supplierName,
-                    p.unitPrice,
-                    p.costPrice,
-                    p.expiryDate,
-                    p.status,
-                    p.barcode
-                FROM product p
-                INNER JOIN category c
-                    ON p.categoryID = c.categoryID
-                INNER JOIN supplier s
-                    ON p.supplierID = s.supplierID
+            query += """
                 WHERE
-                    p.productID LIKE ?
-                    OR p.productName LIKE ?
-                    OR c.categoryName LIKE ?
-                    OR s.supplierName LIKE ?
-                ORDER BY p.productName
+                    p.productID LIKE %s
+                    OR p.productName LIKE %s
+                    OR c.categoryName LIKE %s
+                    OR s.supplierName LIKE %s
             """
 
             search_value = f"%{search}%"
 
-            cursor.execute(
-                query,
-                (
-                    search_value,
-                    search_value,
-                    search_value,
-                    search_value
-                )
-            )
+            params = [
+                search_value,
+                search_value,
+                search_value,
+                search_value
+            ]
 
-        else:
+        query += """
+            ORDER BY p.productID
+        """
 
-            query = """
-                SELECT
-                    p.productID,
-                    p.productName,
-                    c.categoryName,
-                    s.supplierName,
-                    p.unitPrice,
-                    p.costPrice,
-                    p.expiryDate,
-                    p.status,
-                    p.barcode
-                FROM product p
-                INNER JOIN category c
-                    ON p.categoryID = c.categoryID
-                INNER JOIN supplier s
-                    ON p.supplierID = s.supplierID
-                ORDER BY p.productName
-            """
-
-            cursor.execute(query)
+        cursor.execute(query, tuple(params))
 
         products = cursor.fetchall()
-
-        cursor.close()
-        connection.close()
 
         return render_template(
             "products.html",
@@ -246,20 +267,27 @@ def products():
 
     except Exception as e:
 
-        if connection:
-            connection.close()
+        print("PRODUCTS ERROR:", repr(e))
 
-        return f"""
-        <h1>Database Error</h1>
-        <p>{e}</p>
-        """
+        return render_template(
+            "products.html",
+            products=[],
+            search=search,
+            error=f"Could not load products: {e}"
+        )
+
+    finally:
+
+        cursor.close()
+        connection.close()
 
 
-# ==========================================
-# ADD PRODUCT PAGE
-# ==========================================
+# =========================================================
+# ADD PRODUCT
+# =========================================================
 
-@app.route("/products/add")
+@app.route("/products/add", methods=["GET"])
+@login_required
 def add_product():
 
     connection = get_db_connection()
@@ -267,28 +295,31 @@ def add_product():
     if not connection:
         return "Database connection failed."
 
+    cursor = connection.cursor()
+
     try:
 
-        cursor = connection.cursor()
-
+        # GET CATEGORIES
         cursor.execute("""
-            SELECT categoryID, categoryName
-            FROM category
+            SELECT
+                categoryID,
+                categoryName
+            FROM Category
             ORDER BY categoryName
         """)
 
         categories = cursor.fetchall()
 
+        # GET SUPPLIERS
         cursor.execute("""
-            SELECT supplierID, supplierName
-            FROM supplier
+            SELECT
+                supplierID,
+                supplierName
+            FROM Supplier
             ORDER BY supplierName
         """)
 
         suppliers = cursor.fetchall()
-
-        cursor.close()
-        connection.close()
 
         return render_template(
             "add_product.html",
@@ -298,43 +329,74 @@ def add_product():
 
     except Exception as e:
 
-        if connection:
-            connection.close()
+        print("ADD PRODUCT ERROR:", repr(e))
 
         return f"""
-        <h1>Database Error</h1>
+        <h1>Could Not Open Add Product</h1>
         <p>{e}</p>
+        <a href="/products">Back to Products</a>
         """
 
+    finally:
 
-# ==========================================
-# INSERT PRODUCT
-# ==========================================
+        cursor.close()
+        connection.close()
+
+
+# =========================================================
+# SAVE PRODUCT
+# =========================================================
 
 @app.route("/products/add", methods=["POST"])
+@login_required
 def save_product():
 
-    product_id = request.form["productID"].strip()
-    product_name = request.form["productName"].strip()
-    category_id = request.form["categoryID"]
-    supplier_id = request.form["supplierID"]
-    unit_price = request.form["unitPrice"]
-    cost_price = request.form["costPrice"]
+    product_id = request.form.get("productID", "").strip()
+    product_name = request.form.get("productName", "").strip()
+    category_id = request.form.get("categoryID", "").strip()
+    supplier_id = request.form.get("supplierID", "").strip()
+    unit_price = request.form.get("unitPrice", "").strip()
+    cost_price = request.form.get("costPrice", "").strip()
     expiry_date = request.form.get("expiryDate") or None
-    status = request.form["status"]
+    status = request.form.get("status", "").strip()
     barcode = request.form.get("barcode") or None
+
+    if not product_id or not product_name:
+
+        return "Product ID and Product Name are required."
 
     connection = get_db_connection()
 
     if not connection:
         return "Database connection failed."
 
+    cursor = connection.cursor()
+
     try:
 
-        cursor = connection.cursor()
+        cursor.execute("""
+            SELECT productID
+            FROM Product
+            WHERE productID = %s
+        """, (product_id,))
 
-        query = """
-            INSERT INTO product
+        if cursor.fetchone():
+
+            return f"""
+            <h1>Product Already Exists</h1>
+
+            <p>
+                Product ID <strong>{product_id}</strong>
+                already exists.
+            </p>
+
+            <a href="/products/add">
+                Go Back
+            </a>
+            """
+
+        cursor.execute("""
+            INSERT INTO Product
             (
                 productID,
                 categoryID,
@@ -346,36 +408,39 @@ def save_product():
                 status,
                 barcode
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """
-
-        cursor.execute(
-            query,
+            VALUES
             (
-                product_id,
-                category_id,
-                supplier_id,
-                product_name,
-                unit_price,
-                cost_price,
-                expiry_date,
-                status,
-                barcode
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s
             )
-        )
+        """, (
+            product_id,
+            category_id,
+            supplier_id,
+            product_name,
+            unit_price,
+            cost_price,
+            expiry_date,
+            status,
+            barcode
+        ))
 
         connection.commit()
-
-        cursor.close()
-        connection.close()
 
         return redirect(url_for("products"))
 
     except Exception as e:
 
-        if connection:
-            connection.rollback()
-            connection.close()
+        connection.rollback()
+
+        print("SAVE PRODUCT ERROR:", repr(e))
 
         return f"""
         <h1>Could Not Add Product</h1>
@@ -389,12 +454,18 @@ def save_product():
         </a>
         """
 
+    finally:
 
-# ==========================================
-# EDIT PRODUCT PAGE
-# ==========================================
+        cursor.close()
+        connection.close()
 
-@app.route("/products/edit/<product_id>")
+
+# =========================================================
+# EDIT PRODUCT
+# =========================================================
+
+@app.route("/products/edit/<product_id>", methods=["GET"])
+@login_required
 def edit_product(product_id):
 
     connection = get_db_connection()
@@ -402,10 +473,11 @@ def edit_product(product_id):
     if not connection:
         return "Database connection failed."
 
+    cursor = connection.cursor()
+
     try:
 
-        cursor = connection.cursor()
-
+        # GET PRODUCT
         cursor.execute("""
             SELECT
                 productID,
@@ -417,49 +489,48 @@ def edit_product(product_id):
                 expiryDate,
                 status,
                 barcode
-            FROM product
-            WHERE productID = ?
+            FROM Product
+            WHERE productID = %s
         """, (product_id,))
 
         product = cursor.fetchone()
 
         if not product:
 
-            cursor.close()
-            connection.close()
-
-            return """
+            return f"""
             <h1>Product Not Found</h1>
 
-            <p>The product does not exist.</p>
+            <p>
+                Product <strong>{product_id}</strong>
+                does not exist.
+            </p>
 
             <a href="/products">
                 Back to Products
             </a>
             """
 
+        # GET CATEGORIES
         cursor.execute("""
             SELECT
                 categoryID,
                 categoryName
-            FROM category
+            FROM Category
             ORDER BY categoryName
         """)
 
         categories = cursor.fetchall()
 
+        # GET SUPPLIERS
         cursor.execute("""
             SELECT
                 supplierID,
                 supplierName
-            FROM supplier
+            FROM Supplier
             ORDER BY supplierName
         """)
 
         suppliers = cursor.fetchall()
-
-        cursor.close()
-        connection.close()
 
         return render_template(
             "edit_product.html",
@@ -470,29 +541,39 @@ def edit_product(product_id):
 
     except Exception as e:
 
-        if connection:
-            connection.close()
+        print("EDIT PRODUCT ERROR:", repr(e))
 
         return f"""
-        <h1>Database Error</h1>
+        <h1>Could Not Edit Product</h1>
+
         <p>{e}</p>
+
+        <a href="/products">
+            Back to Products
+        </a>
         """
 
+    finally:
 
-# ==========================================
+        cursor.close()
+        connection.close()
+
+
+# =========================================================
 # UPDATE PRODUCT
-# ==========================================
+# =========================================================
 
 @app.route("/products/edit/<product_id>", methods=["POST"])
+@login_required
 def update_product(product_id):
 
-    product_name = request.form["productName"].strip()
-    category_id = request.form["categoryID"]
-    supplier_id = request.form["supplierID"]
-    unit_price = request.form["unitPrice"]
-    cost_price = request.form["costPrice"]
+    product_name = request.form.get("productName", "").strip()
+    category_id = request.form.get("categoryID", "").strip()
+    supplier_id = request.form.get("supplierID", "").strip()
+    unit_price = request.form.get("unitPrice", "").strip()
+    cost_price = request.form.get("costPrice", "").strip()
     expiry_date = request.form.get("expiryDate") or None
-    status = request.form["status"]
+    status = request.form.get("status", "").strip()
     barcode = request.form.get("barcode") or None
 
     connection = get_db_connection()
@@ -500,51 +581,43 @@ def update_product(product_id):
     if not connection:
         return "Database connection failed."
 
+    cursor = connection.cursor()
+
     try:
 
-        cursor = connection.cursor()
-
-        query = """
-            UPDATE product
+        cursor.execute("""
+            UPDATE Product
             SET
-                categoryID = ?,
-                supplierID = ?,
-                productName = ?,
-                unitPrice = ?,
-                costPrice = ?,
-                expiryDate = ?,
-                status = ?,
-                barcode = ?
-            WHERE productID = ?
-        """
-
-        cursor.execute(
-            query,
-            (
-                category_id,
-                supplier_id,
-                product_name,
-                unit_price,
-                cost_price,
-                expiry_date,
-                status,
-                barcode,
-                product_id
-            )
-        )
+                categoryID = %s,
+                supplierID = %s,
+                productName = %s,
+                unitPrice = %s,
+                costPrice = %s,
+                expiryDate = %s,
+                status = %s,
+                barcode = %s
+            WHERE productID = %s
+        """, (
+            category_id,
+            supplier_id,
+            product_name,
+            unit_price,
+            cost_price,
+            expiry_date,
+            status,
+            barcode,
+            product_id
+        ))
 
         connection.commit()
-
-        cursor.close()
-        connection.close()
 
         return redirect(url_for("products"))
 
     except Exception as e:
 
-        if connection:
-            connection.rollback()
-            connection.close()
+        connection.rollback()
+
+        print("UPDATE PRODUCT ERROR:", repr(e))
 
         return f"""
         <h1>Could Not Update Product</h1>
@@ -558,12 +631,18 @@ def update_product(product_id):
         </a>
         """
 
+    finally:
 
-# ==========================================
+        cursor.close()
+        connection.close()
+
+
+# =========================================================
 # DELETE / DISCONTINUE PRODUCT
-# ==========================================
+# =========================================================
 
 @app.route("/products/delete/<product_id>", methods=["POST"])
+@login_required
 def delete_product(product_id):
 
     connection = get_db_connection()
@@ -571,58 +650,57 @@ def delete_product(product_id):
     if not connection:
         return "Database connection failed."
 
+    cursor = connection.cursor()
+
     try:
 
-        cursor = connection.cursor()
-
+        # CHECK PURCHASE HISTORY
         cursor.execute("""
             SELECT COUNT(*)
-            FROM purchaseitem
-            WHERE productID = ?
+            FROM PurchaseItem
+            WHERE productID = %s
         """, (product_id,))
 
         purchase_count = cursor.fetchone()[0]
 
+        # CHECK SALES HISTORY
         cursor.execute("""
             SELECT COUNT(*)
-            FROM saleitem
-            WHERE productID = ?
+            FROM SaleItem
+            WHERE productID = %s
         """, (product_id,))
 
         sale_count = cursor.fetchone()[0]
 
+        # IF PRODUCT HAS HISTORY,
+        # DISCONTINUE IT INSTEAD OF DELETING
         if purchase_count > 0 or sale_count > 0:
 
             cursor.execute("""
-                UPDATE product
+                UPDATE Product
                 SET status = 'Discontinued'
-                WHERE productID = ?
+                WHERE productID = %s
             """, (product_id,))
 
             connection.commit()
 
-            cursor.close()
-            connection.close()
-
             return redirect(url_for("products"))
 
+        # OTHERWISE DELETE PRODUCT
         cursor.execute("""
-            DELETE FROM product
-            WHERE productID = ?
+            DELETE FROM Product
+            WHERE productID = %s
         """, (product_id,))
 
         connection.commit()
-
-        cursor.close()
-        connection.close()
 
         return redirect(url_for("products"))
 
     except Exception as e:
 
-        if connection:
-            connection.rollback()
-            connection.close()
+        connection.rollback()
+
+        print("DELETE PRODUCT ERROR:", repr(e))
 
         return f"""
         <h1>Could Not Delete Product</h1>
@@ -636,6 +714,15 @@ def delete_product(product_id):
         </a>
         """
 
+    finally:
+
+        cursor.close()
+        connection.close()
+
+
+# ==========================================
+# INVENTORY
+# ==========================================
 
 # ==========================================
 # INVENTORY

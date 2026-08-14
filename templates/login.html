@@ -1,0 +1,466 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Login — Supermarket Management System</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+    <style>
+
+        /* =====================================================
+           LOGIN PAGE
+           ===================================================== */
+
+        .login-page {
+            min-height: 100vh;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            padding: 30px;
+
+            box-sizing: border-box;
+
+            background:
+                radial-gradient(
+                    circle at top left,
+                    rgba(249, 115, 22, 0.18),
+                    transparent 35%
+                ),
+                radial-gradient(
+                    circle at bottom right,
+                    rgba(22, 58, 99, 0.25),
+                    transparent 40%
+                ),
+                linear-gradient(
+                    135deg,
+                    #071a2d,
+                    #0f2747 55%,
+                    #163a63
+                );
+        }
+
+
+        /* =====================================================
+           LOGIN CARD
+           ===================================================== */
+
+        .login-card {
+            width: 100%;
+            max-width: 450px;
+
+            background: #ffffff;
+
+            border-radius: 20px;
+
+            padding: 42px;
+
+            box-sizing: border-box;
+
+            box-shadow:
+                0 25px 60px rgba(0, 0, 0, 0.25);
+
+            position: relative;
+
+            overflow: hidden;
+        }
+
+
+        /* Orange top line */
+
+        .login-card::before {
+            content: "";
+
+            position: absolute;
+
+            top: 0;
+            left: 0;
+            right: 0;
+
+            height: 5px;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    #f97316,
+                    #ea580c
+                );
+        }
+
+
+        /* =====================================================
+           LOGIN BRAND
+           ===================================================== */
+
+        .login-header {
+            text-align: center;
+
+            margin-bottom: 32px;
+        }
+
+
+        .login-logo {
+            width: 68px;
+            height: 68px;
+
+            margin: 0 auto 18px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 18px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #f97316,
+                    #ea580c
+                );
+
+            color: #ffffff;
+
+            font-size: 30px;
+            font-weight: 800;
+
+            box-shadow:
+                0 10px 25px rgba(249, 115, 22, 0.28);
+        }
+
+
+        .login-header h1 {
+            margin: 0;
+
+            color: #0f2747;
+
+            font-size: 25px;
+
+            font-weight: 750;
+
+            letter-spacing: -0.5px;
+        }
+
+
+        .login-header p {
+            margin: 9px 0 0;
+
+            color: #64748b;
+
+            font-size: 14px;
+        }
+
+
+        /* =====================================================
+           FORM
+           ===================================================== */
+
+        .login-card .form-group {
+            margin-bottom: 21px;
+        }
+
+
+        .login-card label {
+            display: block;
+
+            margin-bottom: 8px;
+
+            color: #334155;
+
+            font-size: 14px;
+
+            font-weight: 650;
+        }
+
+
+        .login-card input {
+            width: 100%;
+
+            height: 50px;
+
+            padding: 0 15px;
+
+            box-sizing: border-box;
+
+            border: 1px solid #dbe2ea;
+
+            border-radius: 10px;
+
+            background: #f8fafc;
+
+            color: #0f172a;
+
+            font-size: 14px;
+
+            outline: none;
+
+            transition:
+                border-color 0.2s ease,
+                box-shadow 0.2s ease,
+                background 0.2s ease;
+        }
+
+
+        .login-card input::placeholder {
+            color: #94a3b8;
+        }
+
+
+        .login-card input:focus {
+            background: #ffffff;
+
+            border-color: #f97316;
+
+            box-shadow:
+                0 0 0 4px rgba(249, 115, 22, 0.10);
+        }
+
+
+        /* =====================================================
+           LOGIN BUTTON
+           ===================================================== */
+
+        .login-card .btn-primary {
+            width: 100% !important;
+
+            height: 50px;
+
+            margin-top: 5px;
+
+            border: none;
+
+            border-radius: 10px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #f97316,
+                    #ea580c
+                );
+
+            color: #ffffff;
+
+            font-size: 15px;
+
+            font-weight: 700;
+
+            cursor: pointer;
+
+            box-shadow:
+                0 8px 18px rgba(249, 115, 22, 0.22);
+
+            transition:
+                transform 0.2s ease,
+                box-shadow 0.2s ease;
+        }
+
+
+        .login-card .btn-primary:hover {
+            transform: translateY(-1px);
+
+            box-shadow:
+                0 12px 24px rgba(249, 115, 22, 0.30);
+        }
+
+
+        .login-card .btn-primary:active {
+            transform: translateY(0);
+        }
+
+
+        /* =====================================================
+           ERROR MESSAGE
+           ===================================================== */
+
+        .login-card .error {
+            margin-bottom: 20px;
+
+            padding: 12px 14px;
+
+            border-radius: 9px;
+
+            background: #fef2f2;
+
+            border: 1px solid #fecaca;
+
+            color: #b91c1c;
+
+            font-size: 13px;
+
+            line-height: 1.5;
+        }
+
+
+        /* =====================================================
+           FOOTER
+           ===================================================== */
+
+        .login-footer {
+            margin-top: 25px;
+
+            padding-top: 20px;
+
+            border-top: 1px solid #edf0f4;
+
+            text-align: center;
+
+            color: #94a3b8;
+
+            font-size: 12px;
+        }
+
+
+        /* =====================================================
+           MOBILE
+           ===================================================== */
+
+        @media (max-width: 500px) {
+
+            .login-page {
+                padding: 20px;
+            }
+
+            .login-card {
+                padding: 32px 25px;
+                border-radius: 16px;
+            }
+
+            .login-header h1 {
+                font-size: 22px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<div class="login-page">
+
+    <div class="login-card">
+
+
+        <!-- =================================================
+             BRAND
+             ================================================= -->
+
+        <div class="login-header">
+
+            <div class="login-logo">
+                S
+            </div>
+
+            <h1>
+                Supermarket Management System
+            </h1>
+
+            <p>
+                Secure Employee Login
+            </p>
+
+        </div>
+
+
+        <!-- =================================================
+             ERROR
+             ================================================= -->
+
+        {% if error %}
+
+        <div class="error">
+            {{ error }}
+        </div>
+
+        {% endif %}
+
+
+        <!-- =================================================
+             LOGIN FORM
+             ================================================= -->
+
+        <form method="POST">
+
+
+            <!-- EMPLOYEE ID -->
+
+            <div class="form-group">
+
+                <label for="employee_id">
+                    Employee ID or Email
+                </label>
+
+                <input
+                    type="text"
+                    id="employee_id"
+                    name="employee_id"
+                    placeholder="Enter your employee ID or email"
+                    autocomplete="username"
+                    required
+                >
+
+            </div>
+
+
+            <!-- PASSWORD -->
+
+            <div class="form-group">
+
+                <label for="password">
+                    Password
+                </label>
+
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    placeholder="Enter your password"
+                    autocomplete="current-password"
+                    required
+                >
+
+            </div>
+
+
+            <!-- LOGIN BUTTON -->
+
+            <button
+                type="submit"
+                class="btn btn-primary"
+            >
+                Login
+            </button>
+
+        </form>
+
+
+        <!-- =================================================
+             FOOTER
+             ================================================= -->
+
+        <div class="login-footer">
+            Supermarket Management System
+        </div>
+
+
+    </div>
+
+</div>
+
+</body>
+
+</html>
+```
