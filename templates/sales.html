@@ -174,14 +174,37 @@ Sales — Supermarket Management System
 
                     <td>
 
-                        <a
-                            href="/sales/view/{{ sale.saleID }}"
-                            class="btn btn-edit btn-small"
-                        >
-                            View
-                        </a>
+    <a
+        href="/sales/view/{{ sale.saleID }}"
+        class="btn btn-edit btn-small"
+    >
+        View
+    </a>
 
-                    </td>
+    <a
+        href="/sales/edit/{{ sale.saleID }}"
+        class="btn btn-primary btn-small"
+    >
+        Edit
+    </a>
+
+    <form
+        method="POST"
+        action="/sales/delete/{{ sale.saleID }}"
+        style="display: inline;"
+        onsubmit="return confirm('Are you sure you want to delete sale {{ sale.saleID }}? This will restore the quantity to inventory.');"
+    >
+
+        <button
+            type="submit"
+            class="btn btn-secondary btn-small"
+        >
+            Delete
+        </button>
+
+    </form>
+
+</td>
 
                 </tr>
 

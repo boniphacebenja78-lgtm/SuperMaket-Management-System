@@ -6303,3 +6303,231 @@ a:hover {
     }
 
 }
+/* =========================================================
+   DASHBOARD
+   ========================================================= */
+
+.dashboard-container {
+    width: 100%;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   BUSINESS OVERVIEW
+   ========================================================= */
+
+.business-overview {
+    width: 100%;
+    background: #ffffff;
+
+    border-radius: 18px;
+
+    border-top: 3px solid #f97316;
+
+    box-shadow:
+        0 2px 12px rgba(15, 39, 71, 0.08);
+
+    padding: 30px;
+
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.overview-header {
+    padding-bottom: 24px;
+
+    border-bottom:
+        1px solid #e5e7eb;
+
+    margin-bottom: 30px;
+}
+
+
+.overview-header h1 {
+    margin: 0;
+
+    color: #0f2747;
+
+    font-size: 24px;
+
+    font-weight: 700;
+}
+
+
+.overview-header p {
+    margin: 8px 0 0;
+
+    color: #31557d;
+
+    font-size: 15px;
+}
+
+
+/* =========================================================
+   DASHBOARD CARDS
+   ========================================================= */
+
+.dashboard-cards {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+
+    gap: 30px;
+}
+
+
+/* =========================================================
+   INDIVIDUAL CARD
+   ========================================================= */
+
+.dashboard-card {
+
+    background: #ffffff;
+
+    border:
+        1px solid #e1e5ea;
+
+    border-radius: 17px;
+
+    padding: 30px;
+
+    min-height: 175px;
+
+    box-sizing: border-box;
+
+    box-shadow:
+        0 8px 20px rgba(15, 39, 71, 0.07);
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+
+.dashboard-card:hover {
+
+    transform:
+        translateY(-3px);
+
+    box-shadow:
+        0 12px 26px rgba(15, 39, 71, 0.11);
+}
+
+
+/* =========================================================
+   CARD TITLE
+   ========================================================= */
+
+.dashboard-card h3 {
+
+    margin: 0 0 16px;
+
+    color: #0f2747;
+
+    font-size: 18px;
+
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   CARD NUMBER
+   ========================================================= */
+
+.dashboard-number {
+
+    color: #0b3766;
+
+    font-size: 40px;
+
+    line-height: 1;
+
+    font-weight: 800;
+
+    margin-bottom: 14px;
+}
+
+
+/* =========================================================
+   CARD DESCRIPTION
+   ========================================================= */
+
+.dashboard-card p {
+
+    margin: 0;
+
+    color: #55769a;
+
+    font-size: 15px;
+}
+
+
+/* =========================================================
+   ERROR MESSAGE
+   ========================================================= */
+
+.dashboard-error {
+
+    background: #fee2e2;
+
+    color: #991b1b;
+
+    border:
+        1px solid #fecaca;
+
+    padding: 14px 18px;
+
+    border-radius: 8px;
+
+    margin-bottom: 25px;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 1000px) {
+
+    .dashboard-cards {
+
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+
+    }
+
+}
+
+
+@media (max-width: 650px) {
+
+    .business-overview {
+
+        padding: 20px;
+
+    }
+
+    .dashboard-cards {
+
+        grid-template-columns:
+            1fr;
+
+        gap: 18px;
+
+    }
+
+    .dashboard-card {
+
+        padding: 24px;
+
+    }
+
+}
