@@ -1,2 +1,0 @@
-# SuperMaket Management System
-
