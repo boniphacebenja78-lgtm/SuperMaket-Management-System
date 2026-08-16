@@ -182,15 +182,162 @@ def logout():
 @login_required
 def dashboard():
 
-    return render_template(
-        "dashboard.html"
-    )
+    connection = get_db_connection()
+
+    # -----------------------------------------------------
+    # DATABASE CONNECTION FAILED
+    # -----------------------------------------------------
+
+    if not connection:
+
+        return render_template(
+            "dashboard.html",
+            total_products=0,
+            low_stock=0,
+            total_customers=0,
+            total_suppliers=0,
+            total_categories=0,
+            out_of_stock=0,
+            error="Database connection failed."
+        )
+
+    cursor = connection.cursor()
+
+    try:
+
+        # -------------------------------------------------
+        # TOTAL PRODUCTS
+        # -------------------------------------------------
+
+        cursor.execute("""
+            SELECT COUNT(*)
+            FROM Product
+        """)
+
+        total_products = cursor.fetchone()[0]
+
+
+        # -------------------------------------------------
+        # LOW STOCK
+        # Products above 0 but at or below reorder level
+        # -------------------------------------------------
+
+        cursor.execute("""
+            SELECT COUNT(*)
+            FROM Inventory
+            WHERE quantity > 0
+            AND quantity <= reorderLevel
+        """)
+
+        low_stock = cursor.fetchone()[0]
+
+
+        # -------------------------------------------------
+        # TOTAL CUSTOMERS
+        # -------------------------------------------------
+
+        cursor.execute("""
+            SELECT COUNT(*)
+            FROM Customer
+        """)
+
+        total_customers = cursor.fetchone()[0]
+
+
+        # -------------------------------------------------
+        # TOTAL SUPPLIERS
+        # -------------------------------------------------
+
+        cursor.execute("""
+            SELECT COUNT(*)
+            FROM Supplier
+        """)
+
+        total_suppliers = cursor.fetchone()[0]
+
+
+        # -------------------------------------------------
+        # TOTAL CATEGORIES
+        # -------------------------------------------------
+
+        cursor.execute("""
+            SELECT COUNT(*)
+            FROM Category
+        """)
+
+        total_categories = cursor.fetchone()[0]
+
+
+        # -------------------------------------------------
+        # OUT OF STOCK
+        # -------------------------------------------------
+
+        cursor.execute("""
+            SELECT COUNT(*)
+            FROM Inventory
+            WHERE quantity = 0
+        """)
+
+        out_of_stock = cursor.fetchone()[0]
+
+
+        # -------------------------------------------------
+        # SHOW DASHBOARD
+        # -------------------------------------------------
+
+        return render_template(
+            "dashboard.html",
+
+            total_products=total_products,
+
+            low_stock=low_stock,
+
+            total_customers=total_customers,
+
+            total_suppliers=total_suppliers,
+
+            total_categories=total_categories,
+
+            out_of_stock=out_of_stock
+        )
+
+
+    except Exception as e:
+
+        print(
+            "DASHBOARD ERROR:",
+            repr(e)
+        )
+
+        return render_template(
+            "dashboard.html",
+
+            total_products=0,
+
+            low_stock=0,
+
+            total_customers=0,
+
+            total_suppliers=0,
+
+            total_categories=0,
+
+            out_of_stock=0,
+
+            error="Could not load dashboard information."
+        )
+
+
+    finally:
+
+        cursor.close()
+        connection.close()
+        
 # =========================================================
 # PRODUCTS
 # =========================================================
 
 @app.route("/products")
-@login_required
 def products():
 
     connection = get_db_connection()
@@ -287,7 +434,6 @@ def products():
 # =========================================================
 
 @app.route("/products/add", methods=["GET"])
-@login_required
 def add_product():
 
     connection = get_db_connection()
@@ -1106,6 +1252,8 @@ def save_stock():
 # ==========================================
 
 @app.route("/employees/add")
+@login_required
+@role_required("admin")
 def add_employee():
 
     return render_template("add_employee.html")
@@ -1116,6 +1264,8 @@ def add_employee():
 # ==========================================
 
 @app.route("/employees")
+@login_required
+@role_required("admin")
 def employees():
 
     connection = get_db_connection()
@@ -1238,6 +1388,8 @@ def employees():
 # ==========================================
 
 @app.route("/employees/add", methods=["POST"])
+@login_required
+@role_required("admin")
 def save_employee():
 
     employee_id = request.form["employeeID"].strip()
@@ -2108,6 +2260,8 @@ def delete_customer(customer_id):
 # ==========================================
 
 @app.route("/categories")
+@login_required
+@role_required("admin")
 def categories():
     connection = get_db_connection()
 
@@ -2228,6 +2382,8 @@ def categories():
 # ==========================================
 
 @app.route("/categories/add")
+@login_required
+@role_required("admin")
 def add_category():
     return render_template(
         "add_category.html"
@@ -2539,6 +2695,8 @@ def delete_category(category_id):
 # =========================================================
 
 @app.route("/suppliers")
+@login_required
+@role_required("admin")
 def suppliers():
 
     search = request.args.get("search", "").strip()
@@ -2616,6 +2774,8 @@ def suppliers():
 # =========================================================
 
 @app.route("/suppliers/add")
+@login_required
+@role_required("admin")
 def add_supplier():
 
     return render_template(
@@ -2944,7 +3104,6 @@ def delete_supplier(supplier_id):
         cursor.close()
         conn.close()
         
-
 # =========================================================
 # DISCOUNTS
 # =========================================================
@@ -3012,6 +3171,17 @@ def discounts():
             search=search
         )
 
+    except Exception as e:
+
+        print("Error loading discounts:", e)
+
+        return render_template(
+            "discounts.html",
+            discounts=[],
+            search=search,
+            error=str(e)
+        )
+
     finally:
 
         cursor.close()
@@ -3074,32 +3244,44 @@ def save_discount():
 
 
     # -----------------------------------------------------
-    # VALIDATION
+    # REQUIRED FIELD VALIDATION
     # -----------------------------------------------------
 
     if not discount_id:
+
         return render_template(
             "add_discount.html",
             error="Discount ID is required."
         )
 
+
     if not discount_name:
+
         return render_template(
             "add_discount.html",
             error="Discount name is required."
         )
 
+
     if not start_date:
+
         return render_template(
             "add_discount.html",
             error="Start date is required."
         )
 
+
     if not end_date:
+
         return render_template(
             "add_discount.html",
             error="End date is required."
         )
+
+
+    # -----------------------------------------------------
+    # DISCOUNT TYPE VALIDATION
+    # -----------------------------------------------------
 
     if discount_type not in [
         "Percentage",
@@ -3113,7 +3295,19 @@ def save_discount():
 
 
     # -----------------------------------------------------
-    # CONVERT NUMERIC VALUES
+    # DATE VALIDATION
+    # -----------------------------------------------------
+
+    if end_date < start_date:
+
+        return render_template(
+            "add_discount.html",
+            error="End date cannot be earlier than start date."
+        )
+
+
+    # -----------------------------------------------------
+    # NUMERIC VALIDATION
     # -----------------------------------------------------
 
     try:
@@ -3135,7 +3329,7 @@ def save_discount():
 
 
     # -----------------------------------------------------
-    # TYPE VALIDATION
+    # DISCOUNT TYPE LOGIC
     # -----------------------------------------------------
 
     if discount_type == "Percentage":
@@ -3147,6 +3341,7 @@ def save_discount():
                 error="Percentage discount must be between 0 and 100."
             )
 
+        # Fixed amount is not used for Percentage discounts
         fixed_amount = 0
 
 
@@ -3159,8 +3354,13 @@ def save_discount():
                 error="Fixed discount cannot be negative."
             )
 
+        # Percentage is not used for Fixed discounts
         discount_percent = 0
 
+
+    # -----------------------------------------------------
+    # DATABASE INSERT
+    # -----------------------------------------------------
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -3205,9 +3405,15 @@ def save_discount():
 
         return redirect("/discounts")
 
+
     except Exception as e:
 
         conn.rollback()
+
+        print(
+            "Error adding discount:",
+            e
+        )
 
         error_message = str(e)
 
@@ -3221,6 +3427,7 @@ def save_discount():
             "add_discount.html",
             error=error_message
         )
+
 
     finally:
 
@@ -3258,14 +3465,27 @@ def edit_discount(discount_id):
 
         discount = cursor.fetchone()
 
+
         if not discount:
 
             return redirect("/discounts")
+
 
         return render_template(
             "edit_discount.html",
             discount=discount
         )
+
+
+    except Exception as e:
+
+        print(
+            "Error loading discount:",
+            e
+        )
+
+        return redirect("/discounts")
+
 
     finally:
 
@@ -3314,24 +3534,109 @@ def update_discount(discount_id):
     ).strip()
 
 
+    # -----------------------------------------------------
+    # REQUIRED FIELD VALIDATION
+    # -----------------------------------------------------
+
     if not discount_name:
 
-        return redirect(
-            f"/discounts/edit/{discount_id}"
+        return render_template(
+            "edit_discount.html",
+            discount={
+                "discountID": discount_id,
+                "discountName": discount_name,
+                "discountPercent": discount_percent,
+                "startDate": start_date,
+                "endDate": end_date,
+                "discountType": discount_type,
+                "fixedAmount": fixed_amount
+            },
+            error="Discount name is required."
         )
+
 
     if not start_date:
 
-        return redirect(
-            f"/discounts/edit/{discount_id}"
+        return render_template(
+            "edit_discount.html",
+            discount={
+                "discountID": discount_id,
+                "discountName": discount_name,
+                "discountPercent": discount_percent,
+                "startDate": start_date,
+                "endDate": end_date,
+                "discountType": discount_type,
+                "fixedAmount": fixed_amount
+            },
+            error="Start date is required."
         )
+
 
     if not end_date:
 
-        return redirect(
-            f"/discounts/edit/{discount_id}"
+        return render_template(
+            "edit_discount.html",
+            discount={
+                "discountID": discount_id,
+                "discountName": discount_name,
+                "discountPercent": discount_percent,
+                "startDate": start_date,
+                "endDate": end_date,
+                "discountType": discount_type,
+                "fixedAmount": fixed_amount
+            },
+            error="End date is required."
         )
 
+
+    # -----------------------------------------------------
+    # DISCOUNT TYPE VALIDATION
+    # -----------------------------------------------------
+
+    if discount_type not in [
+        "Percentage",
+        "Fixed"
+    ]:
+
+        return render_template(
+            "edit_discount.html",
+            error="Invalid discount type.",
+            discount={
+                "discountID": discount_id,
+                "discountName": discount_name,
+                "discountPercent": discount_percent,
+                "startDate": start_date,
+                "endDate": end_date,
+                "discountType": discount_type,
+                "fixedAmount": fixed_amount
+            }
+        )
+
+
+    # -----------------------------------------------------
+    # DATE VALIDATION
+    # -----------------------------------------------------
+
+    if end_date < start_date:
+
+        return render_template(
+            "edit_discount.html",
+            error="End date cannot be earlier than start date.",
+            discount={
+                "discountID": discount_id,
+                "discountName": discount_name,
+                "discountPercent": discount_percent,
+                "startDate": start_date,
+                "endDate": end_date,
+                "discountType": discount_type,
+                "fixedAmount": fixed_amount
+            }
+        )
+
+
+    # -----------------------------------------------------
+    # NUMERIC VALIDATION
+    # -----------------------------------------------------
 
     try:
 
@@ -3345,17 +3650,41 @@ def update_discount(discount_id):
 
     except ValueError:
 
-        return redirect(
-            f"/discounts/edit/{discount_id}"
+        return render_template(
+            "edit_discount.html",
+            error="Discount values must be valid numbers.",
+            discount={
+                "discountID": discount_id,
+                "discountName": discount_name,
+                "discountPercent": discount_percent,
+                "startDate": start_date,
+                "endDate": end_date,
+                "discountType": discount_type,
+                "fixedAmount": fixed_amount
+            }
         )
 
+
+    # -----------------------------------------------------
+    # DISCOUNT TYPE LOGIC
+    # -----------------------------------------------------
 
     if discount_type == "Percentage":
 
         if discount_percent < 0 or discount_percent > 100:
 
-            return redirect(
-                f"/discounts/edit/{discount_id}"
+            return render_template(
+                "edit_discount.html",
+                error="Percentage discount must be between 0 and 100.",
+                discount={
+                    "discountID": discount_id,
+                    "discountName": discount_name,
+                    "discountPercent": discount_percent,
+                    "startDate": start_date,
+                    "endDate": end_date,
+                    "discountType": discount_type,
+                    "fixedAmount": fixed_amount
+                }
             )
 
         fixed_amount = 0
@@ -3365,19 +3694,26 @@ def update_discount(discount_id):
 
         if fixed_amount < 0:
 
-            return redirect(
-                f"/discounts/edit/{discount_id}"
+            return render_template(
+                "edit_discount.html",
+                error="Fixed discount cannot be negative.",
+                discount={
+                    "discountID": discount_id,
+                    "discountName": discount_name,
+                    "discountPercent": discount_percent,
+                    "startDate": start_date,
+                    "endDate": end_date,
+                    "discountType": discount_type,
+                    "fixedAmount": fixed_amount
+                }
             )
 
         discount_percent = 0
 
 
-    else:
-
-        return redirect(
-            f"/discounts/edit/{discount_id}"
-        )
-
+    # -----------------------------------------------------
+    # DATABASE UPDATE
+    # -----------------------------------------------------
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -3411,6 +3747,7 @@ def update_discount(discount_id):
 
         return redirect("/discounts")
 
+
     except Exception as e:
 
         conn.rollback()
@@ -3420,9 +3757,20 @@ def update_discount(discount_id):
             e
         )
 
-        return redirect(
-            f"/discounts/edit/{discount_id}"
+        return render_template(
+            "edit_discount.html",
+            error=str(e),
+            discount={
+                "discountID": discount_id,
+                "discountName": discount_name,
+                "discountPercent": discount_percent,
+                "startDate": start_date,
+                "endDate": end_date,
+                "discountType": discount_type,
+                "fixedAmount": fixed_amount
+            }
         )
+
 
     finally:
 
@@ -3457,6 +3805,7 @@ def delete_discount(discount_id):
 
         return redirect("/discounts")
 
+
     except Exception as e:
 
         conn.rollback()
@@ -3468,11 +3817,11 @@ def delete_discount(discount_id):
 
         return redirect("/discounts")
 
+
     finally:
 
         cursor.close()
         conn.close()
-        
 # =========================================================
 # LOYALTY CARDS
 # =========================================================
@@ -4039,6 +4388,7 @@ def sales():
                     s.paymentMethod,
                     s.taxAmount,
                     s.pointsRedeemed,
+                    s.pointsAwarded,
 
                     CONCAT(c.fName, ' ', c.lName)
                         AS customerName,
@@ -4087,6 +4437,7 @@ def sales():
                     s.paymentMethod,
                     s.taxAmount,
                     s.pointsRedeemed,
+                    s.pointsAwarded,
 
                     CONCAT(c.fName, ' ', c.lName)
                         AS customerName,
@@ -4116,7 +4467,10 @@ def sales():
 
     except Exception as e:
 
-        print("ERROR LOADING SALES:", repr(e))
+        print(
+            "ERROR LOADING SALES:",
+            repr(e)
+        )
 
         return render_template(
             "sales.html",
@@ -4220,7 +4574,10 @@ def add_sale():
 
     except Exception as e:
 
-        print("ERROR LOADING ADD SALE PAGE:", repr(e))
+        print(
+            "ERROR LOADING ADD SALE PAGE:",
+            repr(e)
+        )
 
         return render_template(
             "add_sale.html",
@@ -4451,6 +4808,7 @@ def save_sale():
 
         existing_sale = cursor.fetchone()
 
+
         if existing_sale:
 
             return render_template(
@@ -4476,6 +4834,7 @@ def save_sale():
         )
 
         employee = cursor.fetchone()
+
 
         if not employee:
 
@@ -4504,6 +4863,7 @@ def save_sale():
             )
 
             customer = cursor.fetchone()
+
 
             if not customer:
 
@@ -4605,7 +4965,6 @@ def save_sale():
             gross_amount - discount_amount
         )
 
-        # 3% tax
         tax_amount = (
             subtotal * 0.03
         )
@@ -4660,9 +5019,14 @@ def save_sale():
         # 9. INSERT SALE ITEM
         # -------------------------------------------------
         #
-        # Your BeforeSaleItemInsert trigger checks stock.
-        # Your AfterSaleItemInsert trigger reduces inventory.
+        # MariaDB triggers handle:
         #
+        # BeforeSaleItemInsert
+        # AfterSaleItemInsert
+        # BeforeSaleItemDiscountInsert
+        # AfterSaleItemInsertTotal
+        #
+        # -------------------------------------------------
 
         cursor.execute(
             """
@@ -4772,6 +5136,7 @@ def sale_details(sale_id):
                 s.paymentMethod,
                 s.taxAmount,
                 s.pointsRedeemed,
+                s.pointsAwarded,
 
                 CONCAT(c.fName, ' ', c.lName)
                     AS customerName,
@@ -4988,6 +5353,852 @@ def get_products_for_sale():
 
         cursor.close()
         conn.close()
+
+
+# =========================================================
+# EDIT SALE PAGE
+# =========================================================
+
+@app.route(
+    "/sales/edit/<sale_id>",
+    methods=["GET"]
+)
+def edit_sale(sale_id):
+
+    conn = get_db_connection()
+
+    if conn is None:
+        return "Database connection failed.", 500
+
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+
+        # -------------------------------------------------
+        # GET SALE
+        # -------------------------------------------------
+
+        cursor.execute(
+            """
+            SELECT
+                s.saleID,
+                s.customerID,
+                s.employeeID,
+                s.saleDate,
+                s.totalAmount,
+                s.paymentMethod,
+                s.taxAmount,
+                s.pointsRedeemed,
+                s.pointsAwarded
+
+            FROM Sale s
+
+            WHERE s.saleID = %s
+            """,
+            (sale_id,)
+        )
+
+        sale = cursor.fetchone()
+
+
+        if not sale:
+
+            return (
+                f"""
+                <h2>Sale Not Found</h2>
+                <p>Sale ID '{sale_id}' does not exist.</p>
+                <a href="/sales">Back to Sales</a>
+                """,
+                404
+            )
+
+
+        # -------------------------------------------------
+        # GET SALE ITEM
+        # -------------------------------------------------
+
+        cursor.execute(
+            """
+            SELECT
+                si.saleID,
+                si.productID,
+                si.quantity,
+                si.unitPrice,
+                si.discount,
+                si.subTotal,
+                p.productName
+
+            FROM SaleItem si
+
+            INNER JOIN Product p
+                ON si.productID = p.productID
+
+            WHERE si.saleID = %s
+
+            LIMIT 1
+            """,
+            (sale_id,)
+        )
+
+        item = cursor.fetchone()
+
+
+        if not item:
+
+            return (
+                f"""
+                <h2>No Sale Item</h2>
+                <p>
+                    Sale '{sale_id}' has no product recorded.
+                </p>
+                <a href="/sales">Back to Sales</a>
+                """,
+                404
+            )
+
+
+        # -------------------------------------------------
+        # GET EMPLOYEES
+        # -------------------------------------------------
+
+        cursor.execute(
+            """
+            SELECT
+                employeeID,
+                fName,
+                lName
+
+            FROM Employee
+
+            WHERE status = 'Active'
+
+            ORDER BY fName, lName
+            """
+        )
+
+        employees = cursor.fetchall()
+
+
+        # -------------------------------------------------
+        # GET CUSTOMERS
+        # -------------------------------------------------
+
+        cursor.execute(
+            """
+            SELECT
+                customerID,
+                fName,
+                lName
+
+            FROM Customer
+
+            ORDER BY fName, lName
+            """
+        )
+
+        customers = cursor.fetchall()
+
+
+        # -------------------------------------------------
+        # GET PRODUCTS
+        # -------------------------------------------------
+
+        cursor.execute(
+            """
+            SELECT
+                p.productID,
+                p.productName,
+                p.unitPrice,
+                i.quantity AS stockQuantity
+
+            FROM Product p
+
+            INNER JOIN Inventory i
+                ON p.productID = i.productID
+
+            ORDER BY p.productName
+            """
+        )
+
+        products = cursor.fetchall()
+
+
+        # -------------------------------------------------
+        # ERROR MESSAGE
+        # -------------------------------------------------
+
+        error = request.args.get(
+            "error",
+            ""
+        ).strip()
+
+
+        return render_template(
+            "edit_sale.html",
+            sale=sale,
+            item=item,
+            employees=employees,
+            customers=customers,
+            products=products,
+            error=error
+        )
+
+
+    except Exception as e:
+
+        print(
+            "ERROR LOADING EDIT SALE:",
+            repr(e)
+        )
+
+        return str(e), 500
+
+
+    finally:
+
+        cursor.close()
+        conn.close()
+
+
+# =========================================================
+# UPDATE SALE
+# =========================================================
+
+@app.route(
+    "/sales/update/<sale_id>",
+    methods=["POST"]
+)
+def update_sale(sale_id):
+
+    # -----------------------------------------------------
+    # GET FORM DATA
+    # -----------------------------------------------------
+
+    employee_id = request.form.get(
+        "employeeID",
+        ""
+    ).strip()
+
+    customer_id = request.form.get(
+        "customerID",
+        ""
+    ).strip()
+
+    payment_method = request.form.get(
+        "paymentMethod",
+        ""
+    ).strip()
+
+    product_id = request.form.get(
+        "productID",
+        ""
+    ).strip()
+
+    quantity_text = request.form.get(
+        "quantity",
+        ""
+    ).strip()
+
+    discount_text = request.form.get(
+        "discount",
+        "0"
+    ).strip()
+
+    points_text = request.form.get(
+        "pointsRedeemed",
+        "0"
+    ).strip()
+
+
+    # -----------------------------------------------------
+    # BASIC VALIDATION
+    # -----------------------------------------------------
+
+    if not employee_id:
+
+        return redirect(
+            f"/sales/edit/{sale_id}"
+            "?error=Please select an employee."
+        )
+
+
+    if not payment_method:
+
+        return redirect(
+            f"/sales/edit/{sale_id}"
+            "?error=Please select a payment method."
+        )
+
+
+    if not product_id:
+
+        return redirect(
+            f"/sales/edit/{sale_id}"
+            "?error=Please select a product."
+        )
+
+
+    # -----------------------------------------------------
+    # QUANTITY
+    # -----------------------------------------------------
+
+    try:
+
+        quantity = int(quantity_text)
+
+        if quantity <= 0:
+            raise ValueError
+
+    except ValueError:
+
+        return redirect(
+            f"/sales/edit/{sale_id}"
+            "?error=Quantity must be a positive whole number."
+        )
+
+
+    # -----------------------------------------------------
+    # DISCOUNT
+    # -----------------------------------------------------
+
+    try:
+
+        discount = float(
+            discount_text or 0
+        )
+
+        if discount < 0 or discount > 100:
+            raise ValueError
+
+    except ValueError:
+
+        return redirect(
+            f"/sales/edit/{sale_id}"
+            "?error=Discount must be between 0 and 100."
+        )
+
+
+    # -----------------------------------------------------
+    # POINTS REDEEMED
+    # -----------------------------------------------------
+
+    try:
+
+        points_redeemed = int(
+            points_text or 0
+        )
+
+        if points_redeemed < 0:
+            raise ValueError
+
+    except ValueError:
+
+        return redirect(
+            f"/sales/edit/{sale_id}"
+            "?error=Points redeemed cannot be negative."
+        )
+
+
+    # -----------------------------------------------------
+    # WALK-IN CUSTOMER
+    # -----------------------------------------------------
+
+    if customer_id == "":
+        customer_id = None
+
+
+    # -----------------------------------------------------
+    # DATABASE CONNECTION
+    # -----------------------------------------------------
+
+    conn = get_db_connection()
+
+    if conn is None:
+        return "Database connection failed.", 500
+
+    cursor = conn.cursor(dictionary=True)
+
+
+    try:
+
+        # =================================================
+        # 1. GET EXISTING SALE
+        # =================================================
+
+        cursor.execute(
+            """
+            SELECT
+                saleID,
+                customerID,
+                employeeID,
+                totalAmount,
+                paymentMethod,
+                pointsRedeemed,
+                pointsAwarded
+
+            FROM Sale
+
+            WHERE saleID = %s
+
+            FOR UPDATE
+            """,
+            (sale_id,)
+        )
+
+        sale = cursor.fetchone()
+
+
+        if not sale:
+
+            return (
+                f"""
+                <h2>Sale Not Found</h2>
+                <p>Sale ID '{sale_id}' does not exist.</p>
+                <a href="/sales">Back to Sales</a>
+                """,
+                404
+            )
+
+
+        # =================================================
+        # 2. GET EXISTING SALE ITEM
+        # =================================================
+
+        cursor.execute(
+            """
+            SELECT
+                saleID,
+                productID,
+                quantity,
+                unitPrice,
+                discount
+
+            FROM SaleItem
+
+            WHERE saleID = %s
+
+            LIMIT 1
+
+            FOR UPDATE
+            """,
+            (sale_id,)
+        )
+
+        old_item = cursor.fetchone()
+
+
+        if not old_item:
+
+            return (
+                f"""
+                <h2>No Sale Item</h2>
+                <p>
+                    Sale '{sale_id}' has no product.
+                </p>
+                <a href="/sales">Back to Sales</a>
+                """,
+                404
+            )
+
+
+        # =================================================
+        # 3. CHECK EMPLOYEE
+        # =================================================
+
+        cursor.execute(
+            """
+            SELECT
+                employeeID
+
+            FROM Employee
+
+            WHERE employeeID = %s
+            """,
+            (employee_id,)
+        )
+
+        employee = cursor.fetchone()
+
+
+        if not employee:
+
+            raise Exception(
+                f"Employee '{employee_id}' does not exist."
+            )
+
+
+        # =================================================
+        # 4. CHECK CUSTOMER
+        # =================================================
+
+        if customer_id is not None:
+
+            cursor.execute(
+                """
+                SELECT
+                    customerID
+
+                FROM Customer
+
+                WHERE customerID = %s
+                """,
+                (customer_id,)
+            )
+
+            customer = cursor.fetchone()
+
+
+            if not customer:
+
+                raise Exception(
+                    f"Customer '{customer_id}' does not exist."
+                )
+
+
+        # =================================================
+        # 5. CHECK PRODUCT
+        # =================================================
+
+        cursor.execute(
+            """
+            SELECT
+                p.productID,
+                p.productName,
+                p.unitPrice,
+                i.quantity AS stockQuantity
+
+            FROM Product p
+
+            INNER JOIN Inventory i
+                ON p.productID = i.productID
+
+            WHERE p.productID = %s
+
+            FOR UPDATE
+            """,
+            (product_id,)
+        )
+
+        new_product = cursor.fetchone()
+
+
+        if not new_product:
+
+            raise Exception(
+                f"Product '{product_id}' "
+                f"was not found or has no inventory record."
+            )
+
+
+        # =================================================
+        # 6. GET UNIT PRICE
+        # =================================================
+
+        unit_price = float(
+            new_product["unitPrice"]
+        )
+
+
+        # =================================================
+        # 7. CALCULATE TOTAL
+        # =================================================
+        #
+        # This value is placed into Sale temporarily.
+        #
+        # After SaleItem is updated,
+        # AfterSaleItemUpdateTotal will calculate the
+        # final total again from SaleItem.subTotal.
+        #
+        # =================================================
+
+        gross_amount = (
+            unit_price * quantity
+        )
+
+        discount_amount = (
+            gross_amount * discount / 100
+        )
+
+        subtotal = (
+            gross_amount - discount_amount
+        )
+
+        tax_amount = (
+            subtotal * 0.03
+        )
+
+        total_amount = (
+            subtotal + tax_amount
+        )
+
+
+        # =================================================
+        # 8. UPDATE SALE HEADER
+        # =================================================
+        #
+        # IMPORTANT:
+        #
+        # We DO NOT modify Inventory here.
+        #
+        # BeforeSaleUpdateLoyalty handles the loyalty
+        # points adjustment when Sale is updated.
+        #
+        # =================================================
+
+        cursor.execute(
+            """
+            UPDATE Sale
+
+            SET
+                customerID = %s,
+                employeeID = %s,
+                totalAmount = %s,
+                paymentMethod = %s,
+                taxAmount = %s,
+                pointsRedeemed = %s
+
+            WHERE saleID = %s
+            """,
+            (
+                customer_id,
+                employee_id,
+                total_amount,
+                payment_method,
+                tax_amount,
+                points_redeemed,
+                sale_id
+            )
+        )
+
+
+        # =================================================
+        # 9. UPDATE SALE ITEM
+        # =================================================
+        #
+        # MariaDB now handles:
+        #
+        # BeforeSaleItemUpdate
+        #     -> stock validation
+        #
+        # BeforeSaleItemDiscountUpdate
+        #     -> automatic percentage discount
+        #
+        # AfterSaleItemUpdate
+        #     -> inventory adjustment
+        #
+        # AfterSaleItemUpdateTotal
+        #     -> Sale.totalAmount
+        #
+        # =================================================
+
+        cursor.execute(
+            """
+            UPDATE SaleItem
+
+            SET
+                productID = %s,
+                quantity = %s,
+                unitPrice = %s,
+                discount = %s
+
+            WHERE saleID = %s
+            """,
+            (
+                product_id,
+                quantity,
+                unit_price,
+                discount,
+                sale_id
+            )
+        )
+
+
+        # =================================================
+        # 10. COMMIT
+        # =================================================
+
+        conn.commit()
+
+
+        print(
+            f"SALE UPDATED SUCCESSFULLY: {sale_id}"
+        )
+
+
+        # =================================================
+        # 11. REDIRECT
+        # =================================================
+
+        return redirect(
+            f"/sales/view/{sale_id}"
+        )
+
+
+    except Exception as e:
+
+        conn.rollback()
+
+        print(
+            "ERROR UPDATING SALE:",
+            repr(e)
+        )
+
+        error_message = str(e).replace(
+            " ",
+            "+"
+        )
+
+
+        return redirect(
+            f"/sales/edit/{sale_id}"
+            f"?error={error_message}"
+        )
+
+
+    finally:
+
+        cursor.close()
+        conn.close()
+
+
+# =========================================================
+# DELETE SALE
+# =========================================================
+
+@app.route(
+    "/sales/delete/<sale_id>",
+    methods=["POST"]
+)
+def delete_sale(sale_id):
+
+    conn = get_db_connection()
+
+    if conn is None:
+        return "Database connection failed.", 500
+
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+
+        # =================================================
+        # 1. CHECK SALE EXISTS
+        # =================================================
+
+        cursor.execute(
+            """
+            SELECT
+                saleID
+
+            FROM Sale
+
+            WHERE saleID = %s
+
+            FOR UPDATE
+            """,
+            (sale_id,)
+        )
+
+        sale = cursor.fetchone()
+
+
+        if not sale:
+
+            raise Exception(
+                f"Sale '{sale_id}' does not exist."
+            )
+
+
+        # =================================================
+        # 2. DELETE SALE ITEMS
+        # =================================================
+        #
+        # IMPORTANT:
+        #
+        # We DO NOT manually restore inventory.
+        #
+        # AfterSaleItemDelete automatically restores the
+        # inventory when the SaleItem is deleted.
+        #
+        # AfterSaleItemDeleteTotal also recalculates the
+        # sale total.
+        #
+        # =================================================
+
+        cursor.execute(
+            """
+            DELETE FROM SaleItem
+
+            WHERE saleID = %s
+            """,
+            (sale_id,)
+        )
+
+
+        # =================================================
+        # 3. DELETE SALE
+        # =================================================
+        #
+        # BeforeSaleDeleteLoyalty automatically removes
+        # the loyalty points awarded by this sale.
+        #
+        # =================================================
+
+        cursor.execute(
+            """
+            DELETE FROM Sale
+
+            WHERE saleID = %s
+            """,
+            (sale_id,)
+        )
+
+
+        if cursor.rowcount == 0:
+
+            raise Exception(
+                f"Unable to delete sale '{sale_id}'."
+            )
+
+
+        # =================================================
+        # 4. COMMIT
+        # =================================================
+
+        conn.commit()
+
+
+        print(
+            f"SALE DELETED SUCCESSFULLY: {sale_id}"
+        )
+
+
+        return redirect("/sales")
+
+
+    except Exception as e:
+
+        conn.rollback()
+
+        print(
+            "ERROR DELETING SALE:",
+            repr(e)
+        )
+
+
+        return (
+            f"""
+            <h2>Unable to Delete Sale</h2>
+            <p>{str(e)}</p>
+            <a href="/sales">Back to Sales</a>
+            """,
+            500
+        )
+
+
+    finally:
+
+        cursor.close()
+        conn.close()
         
 # =========================================================
 # PURCHASES
@@ -4999,6 +6210,8 @@ def get_products_for_sale():
 # =========================================================
 
 @app.route("/purchases")
+@login_required
+@role_required("admin")
 def purchases():
 
     search = request.args.get("search", "").strip()
@@ -5112,6 +6325,8 @@ def purchases():
 # =========================================================
 
 @app.route("/purchases/add")
+@login_required
+@role_required("admin")
 def add_purchase():
 
     conn = get_db_connection()
@@ -5199,6 +6414,8 @@ def add_purchase():
 # =========================================================
 
 @app.route("/purchases/save", methods=["POST"])
+@login_required
+@role_required("admin")
 def save_purchase():
 
     purchase_id = request.form.get(
@@ -6311,6 +7528,8 @@ def get_purchase_products():
     "/purchases/delete/<purchase_id>",
     methods=["POST"]
 )
+@login_required
+@role_required("admin")
 def delete_purchase(purchase_id):
 
     conn = get_db_connection()
@@ -6424,6 +7643,8 @@ def delete_purchase(purchase_id):
 # =========================================================
 
 @app.route("/reports")
+@login_required
+@role_required("admin")
 def reports():
 
     period = request.args.get("period", "all").strip().lower()
